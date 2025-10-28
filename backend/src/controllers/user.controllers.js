@@ -301,4 +301,5 @@ export {
   generateAccessAndRefreshToken,
   logoutUser,
   changePassword,
+  updateAccountDetails,
 };
