@@ -69,6 +69,25 @@ let verifyOTP = asyncHandler(async (req, res) => {
   res.status(200).send(new ApiResponse(200, "User Verified"));
 });
 
+let logoutUser = asyncHandler(async (req, res) => {
+  let user = await User.findByIdAndUpdate(
+    req.user._id,
+    {
+      $set: { refreshToken: undefined },
+    },
+    { new: true }
+  );
+  let options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+  };
+  res
+    .status(200)
+    .clearCookie("accessToken", options)
+    .clearCookie("refreshToken", options)
+    .json(new ApiResponse(200, "", "Logout successful"));
+});
+
 const resendOTP = asyncHandler(async (req, res) => {
   const { email } = req.body;
 
@@ -165,6 +184,72 @@ let generateAccessAndRefreshToken = async function (userId) {
   }
 };
 
+let changePassword = asyncHandler(async (req, res) => {
+  try {
+    let { currentPassword, newPassword } = req.body;
+    let user = await User.findById(req.user._id);
+    if (!user) {
+      throw new ApiError(400, "User not found");
+    }
+    let response = await user.isPasswordCorrect(currentPassword);
+    if (!response) {
+      throw new ApiError(410, "Wrong current password");
+    }
+    user.password = newPassword;
+    await user.save();
+    res
+      .status(200)
+      .json(new ApiResponse(200, user, "Password changed successfully"));
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(500, error?.message || "Something went wrong");
+  }
+});
+
+let updateAccountDetails = asyncHandler(async (req, res) => {
+  try {
+    let { username, email } = req.body;
+    if (username.trim() === "" || email.trim() === "") {
+      throw new ApiError(400, "All fields are required");
+    }
+    const existingUser = await User.findOne({
+      $and: [
+        {
+          $or: [{ username }, { email }],
+        },
+        { _id: { $ne: req.user._id } },
+      ],
+    });
+
+    if (existingUser) {
+      throw new ApiError(
+        410,
+        "Another user with same username or email already exists"
+      );
+    }
+    let user = await User.findByIdAndUpdate(
+      req.user._id,
+      {
+        $set: {
+          username,
+          email,
+        },
+      },
+      { new: true }
+    );
+    res
+      .status(200)
+      .json(new ApiResponse(200, user, "Account data updated successfuly"));
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(500, error?.message || "Something went wrong");
+  }
+});
+
 let refreshAccessToken = async (req, res) => {
   let refreshToken = req.cookies.refreshToken;
 
@@ -214,4 +299,6 @@ export {
   getCurrentUser,
   refreshAccessToken,
   generateAccessAndRefreshToken,
+  logoutUser,
+  changePassword,
 };
