@@ -127,3 +127,38 @@
 .signup-text a:hover {
   text-decoration: underline;
 }
+/* --- Floating animation for login card --- */
+@keyframes float {
+  0% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+  100% {
+    transform: translateY(0);
+  }
+}
+
+.login-card {
+  animation: float 2.5s ease-in-out infinite;
+}
+/* --- Guest Button --- */
+.guest-btn {
+  margin-top: 0.8rem;
+  background: transparent;
+  color: #00ff99;
+  border: 1px solid rgba(0, 255, 128, 0.4);
+  border-radius: 10px;
+  padding: 0.8rem;
+  font-size: 0.95rem;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.guest-btn:hover {
+  background: rgba(0, 255, 128, 0.1);
+  border-color: #00ff99;
+  box-shadow: 0 0 10px #00ff9966;
+}
