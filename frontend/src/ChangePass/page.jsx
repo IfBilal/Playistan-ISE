@@ -6,6 +6,7 @@ export default function ChangePassword() {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [message, setMessage] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -23,6 +24,13 @@ export default function ChangePassword() {
       return;
     }
 
+    if (newPassword.length < 6) {
+      setMessage({ type: "error", text: "New password must be at least 6 characters long." });
+      return;
+    }
+
+    setLoading(true);
+
     try {
       const res = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/v1/users/change-password`,
@@ -31,7 +39,7 @@ export default function ChangePassword() {
           headers: {
             "Content-Type": "application/json",
           },
-          credentials: "include", // ✅ Send cookies (JWT)
+          credentials: "include",
           body: JSON.stringify({ currentPassword, newPassword }),
         }
       );
@@ -43,9 +51,11 @@ export default function ChangePassword() {
       }
 
       setMessage({ type: "success", text: "Password changed successfully!" });
-      setTimeout(() => navigate("/Homepage"), 1200);
+      setTimeout(() => navigate("/homepage"), 1200);
     } catch (error) {
       setMessage({ type: "error", text: error.message });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -54,10 +64,9 @@ export default function ChangePassword() {
       <div className="stars"></div>
 
       <div className="change-password-container">
-        {/* 🔙 Back Arrow */}
         <button
           className="back-arrow"
-          onClick={() => navigate("/Homepage")}
+          onClick={() => navigate("/homepage")}
           aria-label="Go to Homepage"
         >
           ←
@@ -83,6 +92,7 @@ export default function ChangePassword() {
                 className="form-input"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
+                disabled={loading}
               />
             </div>
 
@@ -95,11 +105,12 @@ export default function ChangePassword() {
                 className="form-input"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
+                disabled={loading}
               />
             </div>
 
-            <button type="submit" className="submit-button">
-              Change Password
+            <button type="submit" className="submit-button" disabled={loading}>
+              {loading ? "Changing..." : "Change Password"}
             </button>
           </form>
         </div>

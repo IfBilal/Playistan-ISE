@@ -5,28 +5,27 @@ import "./GroundCard.css";
 const GroundCard = ({ ground }) => {
   const navigate = useNavigate();
 
-  // ✅ Handle Admin Login button click
   const handleAdminLogin = () => {
-    // Must match the lowercase route defined in main.jsx
-    navigate("/admin-login", {
+    navigate("/adminlogin", {
       state: {
-        groundId: ground.id,
+        groundId: ground._id,
         groundName: ground.name,
       },
     });
   };
 
-  // ✅ Prevent rendering if ground data is missing
   if (!ground) return null;
 
   return (
     <div className="ground-card">
       {/* Image Section */}
       <div className="ground-image-container">
-        <img src={ground.image} alt={ground.name} className="ground-image" />
-        {ground.isAvailable && (
-          <span className="availability-badge">Available</span>
-        )}
+        <img 
+          src={ground.coverImage?.url || 'https://images.unsplash.com/photo-1624880357913-a8539238245b?w=800&q=80'} 
+          alt={ground.name} 
+          className="ground-image" 
+        />
+        <span className="availability-badge">Available</span>
       </div>
 
       {/* Details Section */}
@@ -74,19 +73,19 @@ const GroundCard = ({ ground }) => {
                 d="M12 6v6l4 2"
               />
             </svg>
-            <span>{ground.duration} mins</span>
+            <span>{ground.availableHours?.slotDuration || 60} mins</span>
           </div>
         </div>
 
         {/* Price Section */}
         <div className="ground-footer">
           <div className="price-section">
-            <span className="price">Rs. {ground.price}</span>
+            <span className="price">Rs. {ground.basePrice}</span>
             <span className="price-label">per session</span>
           </div>
         </div>
 
-        {/* 🧠 Admin Login Button */}
+        {/* Admin Login Button */}
         <button className="admin-btn-full" onClick={handleAdminLogin}>
           <svg
             width="18"

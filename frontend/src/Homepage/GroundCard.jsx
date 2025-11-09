@@ -6,20 +6,18 @@ const GroundCard = ({ ground }) => {
   const navigate = useNavigate();
 
   const handleBookNow = () => {
-    // Navigate to booking page with ground data
     navigate('/groundbooking', { 
       state: { 
-        groundId: ground.id,
+        groundId: ground._id,
         groundName: ground.name,
         groundLocation: ground.location,
-        groundPrice: ground.price,
-        groundDuration: ground.duration,
-        groundImage: ground.image
+        groundPrice: ground.basePrice,
+        groundDuration: ground.availableHours?.slotDuration || 60,
+        groundImage: ground.coverImage?.url || ''
       } 
     });
   };
 
-  // Safety check for missing ground data
   if (!ground) {
     return null;
   }
@@ -28,13 +26,11 @@ const GroundCard = ({ ground }) => {
     <div className="ground-card">
       <div className="ground-image-container">
         <img 
-          src={ground.image} 
+          src={ground.coverImage?.url || 'https://images.unsplash.com/photo-1624880357913-a8539238245b?w=800&q=80'} 
           alt={ground.name}
           className="ground-image"
         />
-        {ground.isAvailable && (
-          <span className="availability-badge">Available</span>
-        )}
+        <span className="availability-badge">Available</span>
       </div>
       
       <div className="ground-details">
@@ -54,13 +50,13 @@ const GroundCard = ({ ground }) => {
               <circle cx="12" cy="12" r="10" strokeWidth={2}/>
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6l4 2" />
             </svg>
-            <span>{ground.duration} mins</span>
+            <span>{ground.availableHours?.slotDuration || 60} mins</span>
           </div>
         </div>
 
         <div className="ground-footer">
           <div className="price-section">
-            <span className="price">Rs. {ground.price}</span>
+            <span className="price">Rs. {ground.basePrice}</span>
             <span className="price-label">per session</span>
           </div>
         </div>

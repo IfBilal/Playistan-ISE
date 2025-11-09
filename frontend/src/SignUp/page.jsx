@@ -57,7 +57,7 @@ const SignUp = () => {
   };
 
   const handleBackToLogin = () => {
-    navigate("/login");
+    navigate("/");
   };
 
   return (

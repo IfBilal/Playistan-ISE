@@ -1,20 +1,23 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./page.css";
 
 export default function AdminLogin() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  const groundId = location.state?.groundId;
 
   useEffect(() => {
-    // Apply login background styling
     document.body.classList.add("login-page");
     return () => document.body.classList.remove("login-page");
   }, []);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
 
     if (!username.trim() || !password.trim()) {
@@ -22,12 +25,36 @@ export default function AdminLogin() {
       return;
     }
 
-    // Example credentials
-    if (username === "admin" && password === "admin123") {
+    setLoading(true);
+    setMessage(null);
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ username, password }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Login failed");
+      }
+
       setMessage({ type: "success", text: "Login successful! Redirecting to dashboard..." });
-      setTimeout(() => navigate("/admin-dashboard"), 1000);
-    } else {
-      setMessage({ type: "error", text: "Incorrect username or password." });
+      setTimeout(() => {
+        navigate("/admin-dashboard");
+      }, 1000);
+    } catch (error) {
+      setMessage({ type: "error", text: error.message || "Login failed. Please try again." });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -55,6 +82,7 @@ export default function AdminLogin() {
                 className="form-input"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
+                disabled={loading}
               />
             </div>
 
@@ -67,11 +95,12 @@ export default function AdminLogin() {
                 className="form-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
               />
             </div>
 
-            <button type="submit" className="login-button">
-              Login
+            <button type="submit" className="login-button" disabled={loading}>
+              {loading ? "Logging in..." : "Login"}
             </button>
           </form>
         </div>
