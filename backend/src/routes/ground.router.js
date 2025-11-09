@@ -4,7 +4,7 @@ import {
   filterGroundByCity,
   sortAscending,
   sortDescending,
-} from "../controllers/ground.controller.js";
+} from "../controllers/ground.controllers.js";
 
 const router = Router();
 

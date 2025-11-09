@@ -7,10 +7,10 @@ const groundSchema = new Schema(
       required: true,
       trim: true,
     },
-    owner:{
+    owner: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: true
+      required: true,
     },
     description: {
       type: String,
@@ -46,7 +46,11 @@ const groundSchema = new Schema(
     availableHours: {
       start: { type: String, required: true },
       end: { type: String, required: true },
-      slotDuration: 60,
+      slotDuration: {
+        type: Number,
+        default: 60,
+        required: true,
+      },
     },
     photos: [
       {

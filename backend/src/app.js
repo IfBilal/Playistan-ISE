@@ -17,12 +17,14 @@ app.use(cookieParser());
 
 import { errorHandler } from "./middlewares/error.middleware.js";
 import userRouter from "./routes/user.router.js";
+import adminRouter from "./routes/admin.router.js";
+import bookingRouter from "./routes/booking.router.js";
+import groundRouter from "./routes/ground.router.js";
 
-
-
+app.use("/api/v1/admin", adminRouter);
+app.use("/api/v1/bookings", bookingRouter);
+app.use("/api/v1/grounds", groundRouter);
 app.use("/api/v1/users", userRouter);
-
-
 
 app.use(errorHandler);
 export default app;

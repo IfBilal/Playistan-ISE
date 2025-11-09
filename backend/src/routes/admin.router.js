@@ -5,7 +5,7 @@ import {
   pendingBookings,
   confirmBooking,
   rejectBooking,
-} from "../controllers/admin.controller.js";
+} from "../controllers/AdminDashboard.controllers.js";
 import { verifyJWTAdmin } from "../middlewares/AdminAuth.middleware.js";
 
 const router = Router();

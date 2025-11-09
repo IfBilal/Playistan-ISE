@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import {
   refreshAccessToken,
   generateAccessAndRefreshToken,
-} from "../controllers/AdminDashboard.controller.js";
+} from "../controllers/AdminDashboard.controllers.js";
 const verifyJWTAdmin = async (req, res, next) => {
   try {
     const accessToken = req.cookies?.accessToken;

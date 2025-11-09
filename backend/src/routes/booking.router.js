@@ -3,7 +3,7 @@ import {
   bookedGrounds,
   confirmBooking,
   BookGround,
-} from "../controllers/booking.controller.js";
+} from "../controllers/booking.controllers.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
 import { uploadImages } from "../middlewares/multer.middleware.js";
 
