@@ -21,7 +21,7 @@ createRoot(document.getElementById('root')).render(
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
-        <Route path="/otp" element={<OtpVerification />} />
+        <Route path="/otp-verification" element={<OtpVerification />} />
         <Route path="/homepage" element={<Homepage />} />
         <Route path="/guesthome" element={<GuestHome />} />
         <Route path="/groundbooking" element={<BookingPage />} />

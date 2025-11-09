@@ -64,7 +64,7 @@ const OtpVerification = () => {
         localStorage.removeItem("verificationEmail");
         
         // Navigate to login page
-        navigate("/login");
+        navigate("/");
       } else {
         setError(data.message || "Verification failed");
       }
