@@ -1,0 +1,181 @@
+/* ==== GLOBAL RESET & FONT MATCH ==== */
+.add-ground-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 90vh;
+  background: linear-gradient(135deg, #001a0f 0%, #000a05 49%, #001505 100%);
+  color: #e0fff0;
+  font-family: 'Inter', 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  padding: 2rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.add-ground-title {
+  font-size: 2.2rem;
+  font-weight: 700;
+  color: #00ff9d;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 18px rgba(0,255,127,0.25);
+  letter-spacing: 2px;
+}
+
+.add-ground-subtitle {
+  font-size: 1.12rem;
+  color: #b5fce8;
+  margin-bottom: 2.4rem;
+  letter-spacing: 0.25px;
+  text-shadow: 0 1px 9px rgba(0,255,127,0.11);
+}
+
+.add-ground-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.18rem;
+  width: 100%;
+  max-width: 405px;
+  background: rgba(0, 26, 15, 0.65); /* Glassmorphic panel */
+  border-radius: 16px;
+  box-shadow: 0 6px 22px 0 rgba(0,255,127,0.13);
+  padding: 2.7rem 2.2rem;
+  backdrop-filter: blur(2px);
+}
+
+.add-ground-input {
+  padding: 0.96rem 1rem;
+  border-radius: 12px;
+  border: 2px solid #002f1a;
+  outline: none;
+  font-size: 1.04rem;
+  background: linear-gradient(90deg, #001a0f 0%, #001505 100%);
+  color: #e0fff0;
+  text-align: center;
+  box-shadow: 0 2px 11px 0 rgba(0,255,127,0.18), 0 0 2px 0 #00ff9d;
+  transition: border 0.24s, box-shadow 0.18s;
+  letter-spacing: 0.5px;
+}
+
+.add-ground-input:focus {
+  border: 2px solid #00ff9d;
+  box-shadow: 0 0 18px 0 #00ffa6;
+}
+
+/* Button: Neon Glow, Branded */
+.add-ground-button {
+  background: linear-gradient(90deg, #00ff9d 10%, #00af65 80%);
+  color: #001a0f;
+  border: none;
+  border-radius: 12px;
+  padding: 0.9rem 0;
+  font-weight: 700;
+  font-size: 1.08rem;
+  cursor: pointer;
+  box-shadow: 0 0 18px 0 #00ff9d70;
+  transition: background 0.22s, filter 0.15s;
+  outline: none;
+}
+
+.add-ground-button:hover,
+.add-ground-button:focus {
+  background: linear-gradient(90deg, #00e68a 35%, #00ff9d 80%);
+  filter: brightness(1.07) drop-shadow(0 0 10px #00ff9d77);
+}
+
+/* Modal Popup: Glow Box */
+.popup-overlay {
+  position: fixed;
+  inset: 0;
+  background-color: rgba(0, 26, 15, 0.83);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+  backdrop-filter: blur(3.5px);
+}
+
+.popup-box {
+  background: linear-gradient(135deg, #001a0f 85%, #002f1a 100%);
+  padding: 2.1rem 2rem 1.2rem 2rem;
+  border-radius: 17px;
+  text-align: center;
+  max-width: 370px;
+  box-shadow: 0 0 40px 0 #00ff9d29;
+  border: 2px solid #00ff9d30;
+  position: relative;
+}
+
+.popup-box h2 {
+  color: #00ff9d;
+  margin-bottom: 0.7rem;
+  letter-spacing: 1.2px;
+  font-weight: 700;
+  text-shadow: 0 0 20px #00ff9d33;
+}
+
+.popup-box p {
+  color: #dbfce5;
+  margin-bottom: 1.12rem;
+  font-size: 1.02rem;
+}
+
+/* Popup Close Button */
+.popup-close {
+  background: linear-gradient(90deg, #00ff9d 8%, #00b36b 100%);
+  color: #001a0f;
+  border: none;
+  padding: 0.7rem 1.4rem;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 1.05rem;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: background 0.2s, filter 0.13s;
+  box-shadow: 0 0 13px 0 #00ff9d40;
+  outline: none;
+}
+
+.popup-close:hover {
+  background: linear-gradient(90deg, #00e68a 55%, #00ff9d 100%);
+  filter: brightness(1.08);
+}
+
+/* NavBar Add Ground Button: Border Neon Accent */
+.nav-btn-add-ground {
+  background: transparent;
+  border: 2px solid #00ff9d;
+  color: #00ff9d;
+  border-radius: 9px;
+  padding: 0.42rem 1rem;
+  margin-left: 10px;
+  font-weight: 650;
+  cursor: pointer;
+  box-shadow: 0 0 11px #00ff9d52;
+  letter-spacing: 1px;
+  font-size: 1.01rem;
+  transition: background 0.18s, color 0.15s, box-shadow 0.18s;
+}
+
+.nav-btn-add-ground:hover,
+.nav-btn-add-ground:focus {
+  background: linear-gradient(90deg, #00ff9d 80%, #00e68a 100%);
+  color: #001a0f;
+  box-shadow: 0 0 18px #00ff9db5;
+}
+
+/* Responsive max width for mobile */
+@media (max-width: 600px) {
+  .add-ground-form {
+    padding: 1.3rem 0.4rem;
+    max-width: 97vw;
+  }
+  .add-ground-container {
+    padding: 1rem;
+  }
+  .popup-box {
+    max-width: 95vw;
+    padding: 1.1rem 0.3rem 0.8rem 0.3rem;
+  }
+}
