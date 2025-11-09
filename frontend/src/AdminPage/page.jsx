@@ -33,7 +33,7 @@ export default function AdminPage() {
       );
 
       if (!response.ok) {
-        if (response.status === 401) {
+        if (response.status === 401 || response.status === 498) {
           navigate("/adminlogin");
           return;
         }
@@ -42,8 +42,9 @@ export default function AdminPage() {
 
       const data = await response.json();
       
-      const pending = data.data.filter(b => b.status === "pending");
-      const confirmed = data.data.filter(b => b.status === "confirmed");
+      const allBookings = data.data || [];
+      const pending = allBookings.filter(b => b.status === "pending");
+      const confirmed = allBookings.filter(b => b.status === "confirmed");
       
       setPendingBookings(pending);
       setConfirmedBookings(confirmed);

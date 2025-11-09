@@ -16,7 +16,7 @@ const Homepage = () => {
   const fetchGrounds = async () => {
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/ground`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/grounds`,
         {
           method: "GET",
           credentials: "include",
