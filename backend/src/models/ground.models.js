@@ -7,6 +7,11 @@ const groundSchema = new Schema(
       required: true,
       trim: true,
     },
+    owner:{
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true
+    },
     description: {
       type: String,
       trim: true,
@@ -42,10 +47,6 @@ const groundSchema = new Schema(
       start: { type: String, required: true },
       end: { type: String, required: true },
       slotDuration: 60,
-    },
-    amenities: {
-      type: [String],
-      default: [],
     },
     photos: [
       {
