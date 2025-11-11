@@ -1,51 +1,104 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import "./page.css";
 
 const AddGround = () => {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [showPopup, setShowPopup] = useState(false);
+  const [error, setError] = useState("");
+
+  // Add/remove class on body for consistent styling
+  useEffect(() => {
+    document.body.classList.add("add-ground-page");
+    return () => document.body.classList.remove("add-ground-page");
+  }, []);
+
+  // Validate phone number format
+  const validatePhoneNumber = (number) => {
+    // Pakistani phone number format: +92 or 03xx (10-11 digits)
+    const cleanNumber = number.replace(/\s+/g, '');
+    const pkPhoneRegex = /^(\+92|92|0)?3[0-9]{9}$/;
+    return pkPhoneRegex.test(cleanNumber);
+  };
 
   const handleSend = () => {
+    setError("");
+
+    // Validation
     if (phoneNumber.trim() === "") {
-      alert("Please enter your number first!");
+      setError("Please enter your phone number");
       return;
     }
+
+    if (!validatePhoneNumber(phoneNumber)) {
+      setError("Please enter a valid phone number (e.g., 03001234567)");
+      return;
+    }
+
+    // Show success popup
     setShowPopup(true);
+    
+    // Clear form
     setPhoneNumber("");
   };
 
-  return (
-    <div className="add-ground-container">
-      <h1 className="add-ground-title">Add Your Ground to Playistan</h1>
-      <p className="add-ground-subtitle">
-        Enter your phone number and we’ll reach out to help list your ground.
-      </p>
+  const handleKeyPress = (e) => {
+    if (e.key === "Enter") {
+      handleSend();
+    }
+  };
 
-      <div className="add-ground-form">
-        <input
-          type="tel"
-          placeholder="Enter your phone number"
-          value={phoneNumber}
-          onChange={(e) => setPhoneNumber(e.target.value)}
-          className="add-ground-input"
-        />
-        <button onClick={handleSend} className="add-ground-button">
-          Send to Playistan
-        </button>
+  const closePopup = () => {
+    setShowPopup(false);
+  };
+
+  return (
+    <>
+      {/* Animated stars background */}
+      <div className="stars"></div>
+
+      <div className="add-ground-container">
+        <h1 className="add-ground-title">Add Your Ground to Playistan</h1>
+        <p className="add-ground-subtitle">
+          List your sports facility and reach thousands of players. Enter your phone number and our team will contact you shortly.
+        </p>
+
+        <div className="add-ground-form">
+          <input
+            id="phoneNumber"
+            type="tel"
+            placeholder="03001234567"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            onKeyPress={handleKeyPress}
+            className="add-ground-input"
+            autoComplete="tel"
+          />
+          {error && <span className="error-message">{error}</span>}
+
+          <button
+            onClick={handleSend}
+            className="add-ground-button"
+            disabled={!phoneNumber.trim()}
+          >
+            Submit Request
+          </button>
+        </div>
       </div>
 
       {showPopup && (
-        <div className="popup-overlay" onClick={() => setShowPopup(false)}>
-          <div className="popup-box">
-            <h2>Thank you!</h2>
-            <p>We will contact you soon to add your ground to Playistan.</p>
-            <button onClick={() => setShowPopup(false)} className="popup-close">
+        <div className="popup-overlay" onClick={closePopup}>
+          <div className="popup-box" onClick={(e) => e.stopPropagation()}>
+            <h2>Request Submitted!</h2>
+            <p>
+              Thank you for your interest! Our team will contact you within 24-48 hours to help you list your ground on Playistan.
+            </p>
+            <button onClick={closePopup} className="popup-close">
               Close
             </button>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 };
 

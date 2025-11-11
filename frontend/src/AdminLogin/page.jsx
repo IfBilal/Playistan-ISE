@@ -1,32 +1,32 @@
-import { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import "./page.css";
 
-export default function AdminLogin() {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [message, setMessage] = useState(null);
-  const [loading, setLoading] = useState(false);
+const AdminLogin = () => {
   const navigate = useNavigate();
-  const location = useLocation();
-  
-  const groundId = location.state?.groundId;
+  const [formData, setFormData] = useState({
+    username: "",
+    password: "",
+  });
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     document.body.classList.add("login-page");
     return () => document.body.classList.remove("login-page");
   }, []);
 
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+  };
+
   const handleLogin = async (e) => {
     e.preventDefault();
-
-    if (!username.trim() || !password.trim()) {
-      setMessage({ type: "error", text: "Please enter both username and password." });
-      return;
-    }
-
+    setError("");
     setLoading(true);
-    setMessage(null);
 
     try {
       const response = await fetch(
@@ -37,25 +37,27 @@ export default function AdminLogin() {
             "Content-Type": "application/json",
           },
           credentials: "include",
-          body: JSON.stringify({ username, password }),
+          body: JSON.stringify({
+            username: formData.username,
+            password: formData.password,
+          }),
         }
       );
 
       const data = await response.json();
 
-      if (!response.ok) {
-        if ( response.status === 498) {
-          navigate("/");
-          return;
+      if (response.ok) {
+        // Store admin token/status if needed
+        if (data.token) {
+          localStorage.setItem("adminToken", data.token);
         }
+        navigate("/adminpage");
+      } else {
+        setError(data.message || "Invalid credentials. Please try again.");
       }
-
-      setMessage({ type: "success", text: "Login successful! Redirecting to dashboard..." });
-      setTimeout(() => {
-        navigate("/admin-dashboard");
-      }, 1000);
-    } catch (error) {
-      setMessage({ type: "error", text: error.message || "Login failed. Please try again." });
+    } catch (err) {
+      setError("Network error. Please check your connection and try again.");
+      console.error("Admin Login error:", err);
     } finally {
       setLoading(false);
     }
@@ -67,25 +69,28 @@ export default function AdminLogin() {
 
       <div className="admin-login-container">
         <div className="admin-login-card">
+          
           <div className="admin-login-header">
             <h1>Admin Login</h1>
+            <p>Access your ground's dashboard</p>
           </div>
 
-          {message && (
-            <div className={`message ${message.type}`}>{message.text}</div>
-          )}
+          {error && <div className="message error">{error}</div>}
 
-          <form onSubmit={handleLogin} className="admin-login-form">
+          <form className="admin-login-form" onSubmit={handleLogin}>
+            
             <div className="form-group">
               <label htmlFor="username">Username</label>
               <input
                 id="username"
                 type="text"
+                name="username"
                 placeholder="Enter your username"
                 className="form-input"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                disabled={loading}
+                value={formData.username}
+                onChange={handleChange}
+                autoComplete="username"
+                required
               />
             </div>
 
@@ -94,15 +99,21 @@ export default function AdminLogin() {
               <input
                 id="password"
                 type="password"
-                placeholder="Enter your password"
+                name="password"
+                placeholder="••••••••"
                 className="form-input"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={loading}
+                value={formData.password}
+                onChange={handleChange}
+                autoComplete="current-password"
+                required
               />
             </div>
 
-            <button type="submit" className="login-button" disabled={loading}>
+            <button 
+              type="submit" 
+              className="login-button" 
+              disabled={loading || !formData.username || !formData.password}
+            >
               {loading ? "Logging in..." : "Login"}
             </button>
           </form>
@@ -110,4 +121,6 @@ export default function AdminLogin() {
       </div>
     </>
   );
-}
+};
+
+export default AdminLogin;

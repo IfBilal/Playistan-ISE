@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "./page.css";
+import "./page.css"; // Correct: Sibling file
 
 export default function AdminPage() {
   const [pendingBookings, setPendingBookings] = useState([]);
@@ -10,31 +10,37 @@ export default function AdminPage() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // Custom styles for this page
     document.body.style.background = "radial-gradient(circle at top left, #001a0f 0%, #000a05 50%, #001505 100%)";
     document.body.style.minHeight = "100vh";
     document.body.style.margin = "0";
     
     fetchBookings();
 
+    // Cleanup function to reset body style when component unmounts
     return () => {
       document.body.style.background = "";
       document.body.style.minHeight = "";
+      document.body.style.margin = "";
     };
-  }, []);
+  }, []); // Removed navigate dependency to prevent re-fetch on state change
 
   const fetchBookings = async () => {
+    setLoading(true);
     try {
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/pending-bookings`,
         {
           method: "GET",
-          credentials: "include",
+          credentials: "include", // Important for sending cookies
         }
       );
 
       if (!response.ok) {
-        if (response.status === 498) {
-          navigate("/");
+        if (response.status === 498 || response.status === 401) {
+          // Token expired or invalid, redirect to login
+          console.error("Session expired, redirecting to login");
+          navigate("/adminlogin");
           return;
         }
         throw new Error("Failed to fetch bookings");
@@ -42,15 +48,17 @@ export default function AdminPage() {
 
       const data = await response.json();
       
+      // Your backend route /pending-bookings only returns pending ones.
       const allBookings = data.data || [];
       const pending = allBookings.filter(b => b.status === "pending");
       const confirmed = allBookings.filter(b => b.status === "confirmed");
       
       setPendingBookings(pending);
-      setConfirmedBookings(confirmed);
+      setConfirmedBookings(confirmed); // This will be empty on first load
+
     } catch (error) {
       console.error("Error fetching bookings:", error);
-      alert("Failed to load bookings. Please try again.");
+      // You can add a user-facing error message here
     } finally {
       setLoading(false);
     }
@@ -71,15 +79,20 @@ export default function AdminPage() {
       );
 
       if (!response.ok) {
+        if (response.status === 498 || response.status === 401) {
+          navigate("/adminlogin");
+          return;
+        }
         throw new Error("Failed to confirm booking");
       }
 
       const data = await response.json();
       
+      // Move from pending to confirmed in the UI state
       setPendingBookings(prev => prev.filter(b => b._id !== bookingId));
       setConfirmedBookings(prev => [...prev, data.data]);
       
-      alert("Booking confirmed successfully!");
+      alert("Booking confirmed successfully!"); // You can replace this with a toast/modal
     } catch (error) {
       console.error("Error confirming booking:", error);
       alert("Failed to confirm booking. Please try again.");
@@ -87,7 +100,8 @@ export default function AdminPage() {
   };
 
   const handleReject = async (bookingId, userName) => {
-    if (!window.confirm(`Reject ${userName}'s booking?`)) {
+    // Replace window.confirm with a custom modal for better UI
+    if (!confirm(`Are you sure you want to reject ${userName}'s booking?`)) {
       return;
     }
 
@@ -105,11 +119,16 @@ export default function AdminPage() {
       );
 
       if (!response.ok) {
+         if (response.status === 498 || response.status === 401) {
+          navigate("/adminlogin");
+          return;
+        }
         throw new Error("Failed to reject booking");
       }
 
+      // Remove from pending list
       setPendingBookings(prev => prev.filter(b => b._id !== bookingId));
-      alert("Booking rejected successfully!");
+      alert("Booking rejected successfully!"); // You can replace this with a toast/modal
     } catch (error) {
       console.error("Error rejecting booking:", error);
       alert("Failed to reject booking. Please try again.");
@@ -132,7 +151,7 @@ export default function AdminPage() {
       navigate("/adminlogin");
     } catch (error) {
       console.error("Logout error:", error);
-      navigate("/adminlogin");
+      navigate("/adminlogin"); // Force logout even if API call fails
     }
   };
 
@@ -149,7 +168,8 @@ export default function AdminPage() {
     return (
       <div className="admin-dashboard">
         <div className="dashboard-container">
-          <div className="loading-spinner">Loading...</div>
+          {/* You should replace this with a real spinner component */}
+          <div className="loading-spinner">Loading Dashboard...</div>
         </div>
       </div>
     );

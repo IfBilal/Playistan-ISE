@@ -42,7 +42,7 @@ const Homepage = () => {
     }
   };
 
-  const handleChangePassword = () => navigate('/change-password');
+  const handleChangePassword = () => navigate('/changepass');
 
   const filteredGrounds = grounds.filter(
     g => filterCity === 'all' || g.city.toLowerCase() === filterCity.toLowerCase()

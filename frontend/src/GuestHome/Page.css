@@ -299,3 +299,24 @@
     width: 100%;
   }
 }
+
+.nav-btn-add-ground {
+  padding: 10px 24px;
+  border: 2px solid rgba(74, 222, 128, 0.3);
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: transparent;
+  color: #4ADE80;
+}
+
+.nav-btn-add-ground:hover {
+  background: rgba(74, 222, 128, 0.1);
+  border-color: #4ADE80;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(74, 222, 128, 0.2);
+}

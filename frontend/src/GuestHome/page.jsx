@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import GroundCard from './GroundCard';
-import "./Page.css";
+import GroundCard from './GroundCard.jsx'; // Corrected import path
+import "./Page.css"; // Corrected import path
 
 const GuestHome = () => {
   const [grounds, setGrounds] = useState([]);
@@ -40,7 +40,7 @@ const GuestHome = () => {
   };
 
   const handleAddGround = () => {
-    navigate('/add-ground');
+    navigate('/addground'); // Navigates to the route we set up in main.jsx
   };
 
   const filteredGrounds = selectedCity === 'all'
