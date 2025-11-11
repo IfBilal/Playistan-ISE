@@ -24,25 +24,24 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await fetch("http://localhost:8000/api/v1/users/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-        body: JSON.stringify({
-          username: formData.username,
-          password: formData.password,
-        }),
-      });
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/users/login`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            username: formData.username,
+            password: formData.password,
+          }),
+        }
+      );
 
       const data = await response.json();
 
       if (response.ok) {
-        // Store user data if needed
-        localStorage.setItem("user", JSON.stringify(data.data.user));
-        
-        // Navigate to homepage
         navigate("/homepage");
       } else {
         setError(data.message || "Login failed");
@@ -57,10 +56,9 @@ const Login = () => {
 
   const handleSignUp = (e) => {
     e.preventDefault();
-    navigate("/signup");  // Changed back to lowercase to match route
+    navigate("/signup");
   };
 
-  // New function: Go to guest homepage
   const handleGuestAccess = () => {
     navigate("/guesthome");
   };
@@ -100,7 +98,6 @@ const Login = () => {
             {loading ? "Signing In..." : "Sign In"}
           </button>
 
-          {/* Guest Access Button */}
           <button 
             type="button" 
             className="guest-btn" 

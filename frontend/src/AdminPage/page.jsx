@@ -1,294 +1,123 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import "./page.css";
 
-export default function AdminPage() {
-  const [pendingBookings, setPendingBookings] = useState([]);
-  const [confirmedBookings, setConfirmedBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [screenshotModal, setScreenshotModal] = useState(null);
+export default function AdminLogin() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [message, setMessage] = useState(null);
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  const groundId = location.state?.groundId;
 
   useEffect(() => {
-    document.body.style.background = "radial-gradient(circle at top left, #001a0f 0%, #000a05 50%, #001505 100%)";
-    document.body.style.minHeight = "100vh";
-    document.body.style.margin = "0";
-    
-    fetchBookings();
-
-    return () => {
-      document.body.style.background = "";
-      document.body.style.minHeight = "";
-    };
+    document.body.classList.add("login-page");
+    return () => document.body.classList.remove("login-page");
   }, []);
 
-  const fetchBookings = async () => {
+  const handleLogin = async (e) => {
+    e.preventDefault();
+
+    if (!username.trim() || !password.trim()) {
+      setMessage({ type: "error", text: "Please enter both username and password." });
+      return;
+    }
+
+    setLoading(true);
+    setMessage(null);
+
     try {
       const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/pending-bookings`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/login`,
         {
-          method: "GET",
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
           credentials: "include",
+          body: JSON.stringify({ username, password }),
         }
       );
 
+      const data = await response.json();
+
       if (!response.ok) {
-        if (response.status === 401 || response.status === 498) {
-          navigate("/adminlogin");
-          return;
-        }
-        throw new Error("Failed to fetch bookings");
+        throw new Error(data.message || "Login failed");
       }
 
-      const data = await response.json();
-      
-      const allBookings = data.data || [];
-      const pending = allBookings.filter(b => b.status === "pending");
-      const confirmed = allBookings.filter(b => b.status === "confirmed");
-      
-      setPendingBookings(pending);
-      setConfirmedBookings(confirmed);
+      setMessage({ type: "success", text: "Login successful! Redirecting to dashboard..." });
+      setTimeout(() => {
+        navigate("/admin-dashboard");
+      }, 1000);
     } catch (error) {
-      console.error("Error fetching bookings:", error);
-      alert("Failed to load bookings. Please try again.");
+      setMessage({ type: "error", text: error.message || "Login failed. Please try again." });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleConfirm = async (bookingId) => {
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/confirm-booking`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ bookingId }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to confirm booking");
-      }
-
-      const data = await response.json();
-      
-      setPendingBookings(prev => prev.filter(b => b._id !== bookingId));
-      setConfirmedBookings(prev => [...prev, data.data]);
-      
-      alert("Booking confirmed successfully!");
-    } catch (error) {
-      console.error("Error confirming booking:", error);
-      alert("Failed to confirm booking. Please try again.");
-    }
+  const handleBackToGuest = () => {
+    navigate("/guesthome");
   };
-
-  const handleReject = async (bookingId, userName) => {
-    if (!window.confirm(`Reject ${userName}'s booking?`)) {
-      return;
-    }
-
-    try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/reject-booking`,
-        {
-          method: "DELETE",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({ bookingId }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error("Failed to reject booking");
-      }
-
-      setPendingBookings(prev => prev.filter(b => b._id !== bookingId));
-      alert("Booking rejected successfully!");
-    } catch (error) {
-      console.error("Error rejecting booking:", error);
-      alert("Failed to reject booking. Please try again.");
-    }
-  };
-
-  const handleViewScreenshot = (screenshotUrl) => {
-    setScreenshotModal(screenshotUrl);
-  };
-
-  const handleLogout = async () => {
-    try {
-      await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/logout`,
-        {
-          method: "POST",
-          credentials: "include",
-        }
-      );
-      navigate("/adminlogin");
-    } catch (error) {
-      console.error("Logout error:", error);
-      navigate("/adminlogin");
-    }
-  };
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
-    });
-  };
-
-  if (loading) {
-    return (
-      <div className="admin-dashboard">
-        <div className="dashboard-container">
-          <div className="loading-spinner">Loading...</div>
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="admin-dashboard">
-      <div className="dashboard-container">
-        <div className="dashboard-header">
-          <h1>Admin Dashboard</h1>
-          <button className="logout-btn" onClick={handleLogout}>
-            Logout
-          </button>
-        </div>
+    <>
+      <div className="stars"></div>
 
-        {/* Pending Bookings */}
-        <div className="bookings-section">
-          <div className="section-header pending-header">
-            <span className="status-icon">⏱</span>
-            <h2>Pending Bookings ({pendingBookings.length})</h2>
+      <div className="admin-login-container">
+        <button
+          className="back-arrow"
+          onClick={handleBackToGuest}
+          aria-label="Go back"
+        >
+          ←
+        </button>
+
+        <div className="admin-login-card">
+          <div className="admin-login-header">
+            <h1>Admin Login</h1>
+            <p>Access your ground dashboard</p>
           </div>
-          
-          <div className="bookings-list">
-            {pendingBookings.length === 0 ? (
-              <p className="no-bookings">No pending bookings</p>
-            ) : (
-              pendingBookings.map((booking) => (
-                <div key={booking._id} className="booking-card pending-card">
-                  <div className="booking-details">
-                    <div className="booking-time">
-                      <div className="date">{formatDate(booking.date)}</div>
-                      <div className="time">{booking.startTime} - {booking.endTime}</div>
-                    </div>
-                    
-                    <div className="booking-info-section">
-                      <div className="info-row">
-                        <span className="info-label">Name:</span>
-                        <span className="info-text">{booking.userId?.name || 'N/A'}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Email:</span>
-                        <span className="info-text">{booking.userId?.email || 'N/A'}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Ground:</span>
-                        <span className="info-text">{booking.groundId?.name || 'N/A'}</span>
-                      </div>
-                    </div>
 
-                    <div className="booking-amount">
-                      <div className="amount-label">Amount:</div>
-                      <div className="amount-value">PKR {booking.price}</div>
-                    </div>
-                  </div>
+          {message && (
+            <div className={`message ${message.type}`}>{message.text}</div>
+          )}
 
-                  <div className="booking-actions">
-                    <button 
-                      className="btn-screenshot"
-                      onClick={() => handleViewScreenshot(booking.screenshot)}
-                    >
-                      VIEW SCREENSHOT
-                    </button>
-                    <button 
-                      className="btn-confirm"
-                      onClick={() => handleConfirm(booking._id)}
-                    >
-                      CONFIRM
-                    </button>
-                    <button 
-                      className="btn-reject"
-                      onClick={() => handleReject(booking._id, booking.userId?.name)}
-                    >
-                      REJECT
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+          <form onSubmit={handleLogin} className="admin-login-form">
+            <div className="form-group">
+              <label htmlFor="username">Username</label>
+              <input
+                id="username"
+                type="text"
+                placeholder="Enter your username"
+                className="form-input"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                disabled={loading}
+              />
+            </div>
 
-        {/* Confirmed Bookings */}
-        <div className="bookings-section">
-          <div className="section-header confirmed-header">
-            <span className="status-icon">✓</span>
-            <h2>Confirmed Bookings ({confirmedBookings.length})</h2>
-          </div>
-          
-          <div className="bookings-list">
-            {confirmedBookings.length === 0 ? (
-              <p className="no-bookings">No confirmed bookings</p>
-            ) : (
-              confirmedBookings.map((booking) => (
-                <div key={booking._id} className="booking-card confirmed-card">
-                  <div className="booking-details">
-                    <div className="booking-time">
-                      <div className="date">{formatDate(booking.date)}</div>
-                      <div className="time">{booking.startTime} - {booking.endTime}</div>
-                    </div>
-                    
-                    <div className="booking-info-section">
-                      <div className="info-row">
-                        <span className="info-label">Name:</span>
-                        <span className="info-text">{booking.userId?.name || 'N/A'}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Email:</span>
-                        <span className="info-text">{booking.userId?.email || 'N/A'}</span>
-                      </div>
-                      <div className="info-row">
-                        <span className="info-label">Ground:</span>
-                        <span className="info-text">{booking.groundId?.name || 'N/A'}</span>
-                      </div>
-                    </div>
-                  </div>
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                id="password"
+                type="password"
+                placeholder="Enter your password"
+                className="form-input"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                disabled={loading}
+              />
+            </div>
 
-                  <div className="booking-actions">
-                    <button className="btn-confirmed" disabled>
-                      ✓ CONFIRMED
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
+            <button type="submit" className="login-button" disabled={loading}>
+              {loading ? "Logging in..." : "Login"}
+            </button>
+          </form>
         </div>
       </div>
-
-      {/* Screenshot Modal */}
-      {screenshotModal && (
-        <div className="modal-overlay" onClick={() => setScreenshotModal(null)}>
-          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-            <button className="modal-close" onClick={() => setScreenshotModal(null)}>
-              ×
-            </button>
-            <img src={screenshotModal} alt="Payment Screenshot" className="screenshot-image" />
-          </div>
-        </div>
-      )}
-    </div>
+    </>
   );
 }
