@@ -44,7 +44,10 @@ export default function AdminLogin() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || "Login failed");
+        if (response.status === 401 || response.status === 498) {
+          navigate("/");
+          return;
+        }
       }
 
       setMessage({ type: "success", text: "Login successful! Redirecting to dashboard..." });

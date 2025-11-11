@@ -34,7 +34,7 @@ export default function AdminPage() {
 
       if (!response.ok) {
         if (response.status === 401 || response.status === 498) {
-          navigate("/adminlogin");
+          navigate("/");
           return;
         }
         throw new Error("Failed to fetch bookings");

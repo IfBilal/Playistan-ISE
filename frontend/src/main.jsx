@@ -1,35 +1,52 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import './index.css';
+import PrivateRoute from "./PrivateRoute.jsx";
 
-// Import all pages
-import Login from './Login.jsx';
-import SignUp from './SignUp/page.jsx';
-import OtpVerification from './Otp/page.jsx';
-import Homepage from './Homepage/page.jsx';
-import GuestHome from './GuestHome/page.jsx';
-import BookingPage from './GroundBooking/page.jsx';
-import AddGround from './AddGround/page.jsx';
-import ChangePassword from './ChangePass/page.jsx';
-import AdminLogin from './AdminLogin/page.jsx';
-import AdminPage from './AdminPage/page.jsx';
+<Routes>
+  <Route path="/" element={<Login />} />
+  <Route path="/signup" element={<SignUp />} />
+  <Route path="/otp" element={<OtpVerification />} />
+  
+  {/* Protected routes */}
+  <Route
+    path="/homepage"
+    element={
+      <PrivateRoute>
+        <Homepage />
+      </PrivateRoute>
+    }
+  />
+  <Route
+    path="/groundbooking"
+    element={
+      <PrivateRoute>
+        <BookingPage />
+      </PrivateRoute>
+    }
+  />
+  <Route
+    path="/add-ground"
+    element={
+      <PrivateRoute>
+        <AddGround />
+      </PrivateRoute>
+    }
+  />
+  <Route
+    path="/change-password"
+    element={
+      <PrivateRoute>
+        <ChangePassword />
+      </PrivateRoute>
+    }
+  />
+  <Route
+    path="/admin-dashboard"
+    element={
+      <PrivateRoute>
+        <AdminPage />
+      </PrivateRoute>
+    }
+  />
 
-createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <BrowserRouter>
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/otp" element={<OtpVerification />} />
-        <Route path="/homepage" element={<Homepage />} />
-        <Route path="/guesthome" element={<GuestHome />} />
-        <Route path="/groundbooking" element={<BookingPage />} />
-        <Route path="/add-ground" element={<AddGround />} />
-        <Route path="/change-password" element={<ChangePassword />} />
-        <Route path="/adminlogin" element={<AdminLogin />} />
-        <Route path="/admin-dashboard" element={<AdminPage />} />
-      </Routes>
-    </BrowserRouter>
-  </StrictMode>
-);
+  {/* Public route */}
+  <Route path="/guesthome" element={<GuestHome />} />
+</Routes>

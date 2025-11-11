@@ -44,7 +44,7 @@ const SignUp = () => {
         localStorage.setItem("verificationEmail", formData.email);
         
         // Navigate to OTP verification page
-        navigate("/otp-verification");
+        navigate("/otp");
       } else {
         setError(data.message || "Sign up failed");
       }

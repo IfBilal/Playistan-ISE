@@ -47,7 +47,12 @@ export default function ChangePassword() {
       const data = await res.json();
 
       if (!res.ok) {
-        throw new Error(data.message || "Password change failed");
+        if (data.status === 401 || data.status === 498) {
+          navigate("/");
+          return;
+        }
+        setMessage({ type: "error", text: data.message || "Failed to change password." });
+        return;
       }
 
       setMessage({ type: "success", text: "Password changed successfully!" });
