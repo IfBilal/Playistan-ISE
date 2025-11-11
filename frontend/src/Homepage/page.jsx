@@ -17,20 +17,13 @@ const Homepage = () => {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/v1/grounds`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
+        { method: "GET", credentials: "include" }
       );
-
-      if (!response.ok) {
-        throw new Error("Failed to fetch grounds");
-      }
-
+      if (!response.ok) throw new Error("Failed to fetch grounds");
       const data = await response.json();
       setGrounds(data.data || []);
-    } catch (error) {
-      console.error('Error fetching grounds:', error);
+    } catch (err) {
+      console.error('Error fetching grounds:', err);
       alert("Failed to load grounds. Please try again.");
     } finally {
       setLoading(false);
@@ -41,30 +34,18 @@ const Homepage = () => {
     try {
       const response = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/v1/users/logout`,
-        {
-          method: "POST",
-          credentials: "include",
-        }
+        { method: "POST", credentials: "include" }
       );
-
-      if (response.ok) {
-        navigate('/');
-      }
-    } catch (error) {
-      console.error("Logout error:", error);
+      if (response.ok || response.status === 498) navigate('/');
+    } catch (err) {
+      console.error("Logout error:", err);
     }
   };
 
-  const handleChangePassword = () => {
-    navigate('/change-password');
-  };
-
-  const handleCityFilter = (e) => {
-    setFilterCity(e.target.value);
-  };
+  const handleChangePassword = () => navigate('/change-password');
 
   const filteredGrounds = grounds.filter(
-    (ground) => filterCity === 'all' || ground.city.toLowerCase() === filterCity.toLowerCase()
+    g => filterCity === 'all' || g.city.toLowerCase() === filterCity.toLowerCase()
   );
 
   if (loading) {
@@ -78,6 +59,7 @@ const Homepage = () => {
 
   return (
     <div className="homepage-container">
+      {/* HEADER */}
       <header className="homepage-header">
         <div className="header-content">
           <h1 className="homepage-logo">Playistan</h1>
@@ -89,26 +71,28 @@ const Homepage = () => {
         </div>
       </header>
 
+      {/* HERO SECTION */}
       <section className="hero-section">
         <div className="hero-content">
           <h2 className="hero-title">Book Your Perfect Sports Ground</h2>
           <p className="hero-subtitle">Choose from premium sports grounds across Pakistan</p>
 
           <div className="filter-bar">
-            <svg className="filter-icon" width="20" height="20" viewBox="0 0 20 20" fill="none">
-              <path d="M8 2C4.13 2 1 5.13 1 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
+            <svg className="filter-icon" width="20" height="20" viewBox="0 0 20 20">
+              <path d="M8 2C4.13 2 1 5.13 1 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
             </svg>
-            <select value={filterCity} onChange={handleCityFilter} className="city-filter">
+            <select value={filterCity} onChange={e => setFilterCity(e.target.value)} className="city-filter">
               <option value="all">All Cities</option>
-              <option value="islamabad">Islamabad</option>
-              <option value="rawalpindi">Rawalpindi</option>
-              <option value="lahore">Lahore</option>
-              <option value="karachi">Karachi</option>
+              <option value="Islamabad">Islamabad</option>
+              <option value="Rawalpindi">Rawalpindi</option>
+              <option value="Lahore">Lahore</option>
+              <option value="Karachi">Karachi</option>
             </select>
           </div>
         </div>
       </section>
 
+      {/* GROUNDS GRID */}
       <section className="grounds-section">
         <div className="grounds-container">
           {filteredGrounds.length === 0 ? (
@@ -122,14 +106,15 @@ const Homepage = () => {
             </div>
           ) : (
             <div className="grounds-grid">
-              {filteredGrounds.map((ground) => (
-                <GroundCard key={ground._id} ground={ground} />
+              {filteredGrounds.map(ground => (
+                <GroundCard key={ground._id || ground.id} ground={ground} />
               ))}
             </div>
           )}
         </div>
       </section>
 
+      {/* FOOTER */}
       <footer className="homepage-footer">
         <p>&copy; 2025 Playistan. All rights reserved.</p>
       </footer>

@@ -1,66 +1,46 @@
-import { StrictMode } from "react";
-import { createRoot } from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import './index.css';
 
-import Login from "./Login.jsx";
-import SignUp from "./SignUp/page.jsx";
-import OtpVerification from "./Otp/page.jsx";
-import Homepage from "./Homepage/page.jsx";
-import GuestHome from "./GuestHome/page.jsx";
-import BookingPage from "./GroundBooking/page.jsx";
-import AddGround from "./AddGround/page.jsx";
-import ChangePassword from "./ChangePass/page.jsx";
-import AdminLogin from "./AdminLogin/page.jsx";
-import AdminPage from "./AdminPage/page.jsx";
+// Auth Pages
+import Login from './Login.jsx';
+import SignUp from './SignUp/page.jsx';
+import OtpVerification from './Otp/page.jsx';
+import ChangePass from './ChangePass/page.jsx';
 
-import PrivateRoute from "./PrivateRoute.jsx"; // Protected routes wrapper
+// Guest Pages
+import GuestHome from './GuestHome/page.jsx';
 
-createRoot(document.getElementById("root")).render(
-  <StrictMode>
+// Logged-in Homepage
+import Homepage from './Homepage/page.jsx'; // dark homepage with hero + grounds
+
+// Ground Booking
+import GroundBooking from './GroundBooking/page.jsx';
+
+const Main = () => {
+  return (
     <BrowserRouter>
       <Routes>
-        {/* Public routes */}
+        {/* Default Login Route */}
         <Route path="/" element={<Login />} />
+
+        {/* Auth Routes */}
         <Route path="/signup" element={<SignUp />} />
         <Route path="/otp" element={<OtpVerification />} />
-        <Route path="/guesthome" element={<GuestHome />} />
-        <Route path="/adminlogin" element={<AdminLogin />} />
-        <Route path="/add-ground" element={<AddGround />} /> {/* PUBLIC */}
+        <Route path="/changepass" element={<ChangePass />} />
 
-        {/* Protected routes */}
-        <Route
-          path="/homepage"
-          element={
-            <PrivateRoute>
-              <Homepage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/groundbooking"
-          element={
-            <PrivateRoute>
-              <BookingPage />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/change-password"
-          element={
-            <PrivateRoute>
-              <ChangePassword />
-            </PrivateRoute>
-          }
-        />
-        <Route
-          path="/admin-dashboard"
-          element={
-            <PrivateRoute>
-              <AdminPage />
-            </PrivateRoute>
-          }
-        />
+        {/* Guest Landing Page */}
+        <Route path="/guesthome" element={<GuestHome />} />
+
+        {/* Logged-in Homepage */}
+        <Route path="/homepage" element={<Homepage />} />
+
+        {/* Ground Booking Page */}
+        <Route path="/groundbooking/:groundId" element={<GroundBooking />} />
       </Routes>
     </BrowserRouter>
-  </StrictMode>
-);
+  );
+};
+
+createRoot(document.getElementById('root')).render(<Main />);

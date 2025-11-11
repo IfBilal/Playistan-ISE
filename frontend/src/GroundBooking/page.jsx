@@ -1,284 +1,224 @@
-import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import './page.css';
 
 const BookingPage = () => {
   const location = useLocation();
+  const { groundId } = useParams();
   const navigate = useNavigate();
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedSlot, setSelectedSlot] = useState(null);
-  const [dates, setDates] = useState([]);
-  const [screenshot, setScreenshot] = useState(null);
-  const [previewUrl, setPreviewUrl] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [bookedSlots, setBookedSlots] = useState([]);
 
-  const groundData = location.state || {
-    groundId: null,
-    groundName: 'Ground',
-    groundLocation: 'Location',
-    groundPrice: 0,
-    groundDuration: 60,
-    groundImage: ''
+  const [ground, setGround] = useState(location.state || null);
+  const [loading, setLoading] = useState(!location.state);
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedSlot, setSelectedSlot] = useState('');
+  const [paymentScreenshot, setPaymentScreenshot] = useState(null);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [confirmLoading, setConfirmLoading] = useState(false);
+
+  // Generate dates dynamically: today + next 7 days
+  const generateDates = (numDays = 7) => {
+    const dates = [];
+    const today = new Date();
+    for (let i = 0; i < numDays; i++) {
+      const dateObj = new Date(today);
+      dateObj.setDate(today.getDate() + i);
+      const dateStr = dateObj.toISOString().split('T')[0]; // YYYY-MM-DD
+      const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'short' });
+      dates.push({ date: dateStr, day: dayName });
+    }
+    return dates;
   };
+
+  const availableDates = generateDates(7);
 
   useEffect(() => {
-    generateDates();
-  }, []);
+    if (!ground && groundId) fetchGround();
+  }, [groundId]);
 
-  useEffect(() => {
-    if (selectedDate && groundData.groundId) {
-      fetchBookedSlots(selectedDate.fullDate);
-    }
-  }, [selectedDate, groundData.groundId]);
-
-  const generateDates = () => {
-    const daysOfWeek = ['SUN', 'MON', 'TUES', 'WED', 'THURS', 'FRI', 'SAT'];
-    const generatedDates = [];
-    for (let i = 0; i < 5; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() + i);
-      generatedDates.push({
-        day: daysOfWeek[date.getDay()],
-        date: date.getDate().toString(),
-        fullDate: date.toISOString().split('T')[0]
-      });
-    }
-    setDates(generatedDates);
-  };
-
-  const fetchBookedSlots = async (date) => {
+  const fetchGround = async () => {
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/bookings/booked-grounds?groundId=${groundData.groundId}&date=${date}`,
-        {
-          method: "GET",
-          credentials: "include",
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        setBookedSlots(data.data || []);
-      }
-    } catch (error) {
-      console.error("Error fetching booked slots:", error);
-    }
-  };
-
-  const timeSlots = [
-    { start: '09:00', end: '10:00', display: '9:00 - 10:00 AM' },
-    { start: '10:00', end: '11:00', display: '10:00 - 11:00 AM' },
-    { start: '11:00', end: '12:00', display: '11:00 AM - 12:00 PM' },
-    { start: '12:00', end: '13:00', display: '12:00 - 1:00 PM' },
-    { start: '13:00', end: '14:00', display: '1:00 - 2:00 PM' },
-    { start: '14:00', end: '15:00', display: '2:00 - 3:00 PM' },
-    { start: '15:00', end: '16:00', display: '3:00 - 4:00 PM' },
-    { start: '16:00', end: '17:00', display: '4:00 - 5:00 PM' },
-    { start: '17:00', end: '18:00', display: '5:00 - 6:00 PM' },
-    { start: '18:00', end: '19:00', display: '6:00 - 7:00 PM' },
-    { start: '19:00', end: '20:00', display: '7:00 - 8:00 PM' },
-    { start: '20:00', end: '21:00', display: '8:00 - 9:00 PM' },
-    { start: '21:00', end: '22:00', display: '9:00 - 10:00 PM' },
-    { start: '22:00', end: '23:00', display: '10:00 - 11:00 PM' }
-  ];
-
-  const isSlotBooked = (slot) => {
-    if (!selectedDate) return false;
-    return bookedSlots.some(
-      booking => 
-        booking.startTime === slot.start && 
-        booking.endTime === slot.end &&
-        booking.date === selectedDate.fullDate
-    );
-  };
-
-  const handleDateClick = (dateObj) => {
-    setSelectedDate(dateObj);
-    setSelectedSlot(null);
-  };
-
-  const handleSlotClick = (slot) => {
-    if (!isSlotBooked(slot)) {
-      setSelectedSlot(slot);
-    }
-  };
-
-  const handleBackToHome = () => navigate('/homepage');
-
-  const handleScreenshotChange = (e) => {
-    const file = e.target.files[0];
-    if (file && (file.type === 'image/jpeg' || file.type === 'image/jpg' || file.type === 'image/png')) {
-      setScreenshot(file);
-      setPreviewUrl(URL.createObjectURL(file));
-    } else {
-      alert('Only JPEG, JPG, or PNG files are allowed.');
-      e.target.value = '';
-    }
-  };
-
-  const handleMakeBooking = async () => {
-    if (!selectedDate || !selectedSlot || !screenshot) {
-      alert('Please select a date, time slot, and upload a payment screenshot.');
-      return;
-    }
-
-    if (!groundData.groundId) {
-      alert('Ground information is missing. Please go back and try again.');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const formData = new FormData();
-      formData.append('groundId', groundData.groundId);
-      formData.append('date', selectedDate.fullDate);
-      formData.append('startTime', selectedSlot.start);
-      formData.append('endTime', selectedSlot.end);
-      formData.append('screenshot', screenshot);
-
-      const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/bookings/book-ground`,
-        {
-          method: 'POST',
-          credentials: 'include',
-          body: formData,
-        }
-      );
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Booking failed');
-      }
-
-      alert('Booking created successfully! Waiting for admin confirmation.');
-      navigate('/homepage');
-    } catch (error) {
-      console.error('Booking error:', error);
-      alert(error.message || 'Failed to create booking. Please try again.');
+      setLoading(true);
+      const res = await fetch(`http://localhost:8000/api/v1/grounds/${groundId}`);
+      const data = await res.json();
+      if (res.ok && data.data) setGround(data.data);
+    } catch (err) {
+      console.error('Failed to fetch ground:', err);
     } finally {
       setLoading(false);
     }
   };
+
+  if (loading) return <div className="booking-container">Loading ground details...</div>;
+  if (!ground) return <div className="booking-container">No ground selected.</div>;
+
+  // Generate 1-hour slots dynamically
+  const generateSlots = (start, end) => {
+    const slots = [];
+    let [startHour, startMin] = start.split(':').map(Number);
+    const [endHour, endMin] = end.split(':').map(Number);
+
+    while (startHour < endHour || (startHour === endHour && startMin < endMin)) {
+      const nextHour = startHour + 1;
+      const slot = `${startHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')} - ${nextHour.toString().padStart(2, '0')}:${startMin.toString().padStart(2, '0')}`;
+      slots.push(slot);
+      startHour = nextHour;
+    }
+    return slots;
+  };
+
+  const availableSlots = generateSlots(ground.availableHours.start, ground.availableHours.end);
+
+  const handleBooking = async () => {
+    if (!selectedDate || !selectedSlot || !paymentScreenshot) {
+      alert('Select a date, slot, and upload payment screenshot.');
+      return;
+    }
+
+    const [startTime, endTime] = selectedSlot.split(' - ');
+    const formData = new FormData();
+    formData.append('groundId', ground._id);
+    formData.append('date', selectedDate);
+    formData.append('startTime', startTime);
+    formData.append('endTime', endTime);
+    formData.append('paymentScreenshot', paymentScreenshot);
+
+    try {
+      setBookingLoading(true);
+      const res = await fetch('http://localhost:8000/api/v1/bookings/book', {
+        method: 'POST',
+        body: formData,
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+        credentials: 'include', // <<< FIXED: send cookies for refresh token
+      });
+      const data = await res.json();
+      if(res.status === 498){
+        navigate('/');
+        return;
+      }
+      if (res.ok) {
+        alert('Booking created. Confirming...');
+  
+      } else {
+        alert(data.message || 'Booking failed.');
+      }
+    } catch (err) {
+      console.error('Booking error:', err);
+      alert('Booking failed.');
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+ 
 
   return (
     <div className="booking-container">
       <div className="booking-card">
         {/* Header */}
         <div className="header">
-          <button className="back-button" onClick={handleBackToHome}>
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
+          <button className="back-button" onClick={() => navigate(-1)}>←</button>
+          <h1 className="logo">{ground.name}</h1>
         </div>
 
         {/* Venue Info */}
         <div className="venue-info">
-          <div className="location-icon">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-              <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5S10.62 6.5 12 6.5s2.5 1.12 2.5 2.5S13.38 11.5 12 11.5z" fill="#4ADE80"/>
-            </svg>
-          </div>
           <div className="venue-details">
-            <h2 className="venue-name">{groundData.groundName}</h2>
-            <p className="venue-description">{groundData.groundLocation}</p>
+            <h2 className="venue-name">{ground.name}</h2>
+            <p className="venue-description">{ground.description || 'No description provided.'}</p>
             <div className="venue-meta">
-              <span className="meta-item">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <circle cx="8" cy="8" r="6" stroke="currentColor" strokeWidth="1.5"/>
-                  <path d="M8 4v4l3 3" stroke="currentColor" strokeWidth="1.5"/>
-                </svg>
-                {groundData.groundDuration} min slots
-              </span>
-              <span className="meta-item">
-                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <path d="M8 1v14M11 4H6.5C5.67 4 5 4.67 5 5.5S5.67 7 6.5 7h3c.83 0 1.5.67 1.5 1.5S10.33 10 9.5 10H5" stroke="currentColor" strokeWidth="1.5"/>
-                </svg>
-                Rs. {groundData.groundPrice}
-              </span>
+              <div className="meta-item">City: {ground.city}</div>
+              <div className="meta-item">Owner: {ground.owner?.name || 'Unknown'}</div>
+              <div className="meta-item">Email: {ground.owner?.email || 'N/A'}</div>
+              <div className="meta-item">Location: {ground.location}</div>
+              <div className="meta-item">Price: Rs. {ground.basePrice}</div>
+            </div>
+            {ground.rules && (
+              <div className="rules-section" style={{ marginTop: '20px', color: '#A7F3D0' }}>
+                <h3 className="section-title">Rules</h3>
+                <p>{ground.rules}</p>
+              </div>
+            )}
+          </div>
+
+          <div className="booking-images">
+            <img
+              className="main-image"
+              src={ground.coverImage?.url || 'https://images.unsplash.com/photo-1624880357913-a8539238245b?w=800&q=80'}
+              alt={ground.name}
+            />
+            <div className="photo-grid">
+              {Array.isArray(ground.photos) && ground.photos.map((photo, idx) => (
+                <img key={idx} className="small-photo" src={photo.url} alt={`photo-${idx}`} />
+              ))}
             </div>
           </div>
         </div>
 
         {/* Date Selection */}
         <div className="date-section">
-          <h3 className="section-title">SELECT DATE</h3>
+          <h3 className="section-title">Select Date</h3>
           <div className="date-grid">
-            {dates.map((dateObj, index) => (
-              <button
-                key={index}
-                className={`date-card ${selectedDate?.date === dateObj.date ? 'selected' : ''}`}
-                onClick={() => handleDateClick(dateObj)}
+            {availableDates.map((d, idx) => (
+              <div
+                key={idx}
+                className={`date-card ${selectedDate === d.date ? 'selected' : ''}`}
+                onClick={() => setSelectedDate(d.date)}
               >
-                <span className="date-day">{dateObj.day}</span>
-                <span className="date-number">{dateObj.date}</span>
-              </button>
+                <div className="date-day">{d.day}</div>
+                <div className="date-number">{d.date.split('-')[2]}</div>
+              </div>
             ))}
           </div>
         </div>
 
-        {/* Time Slots */}
-        {selectedDate && (
-          <div className="slots-section">
-            <h3 className="section-title">AVAILABLE TIME SLOTS</h3>
-            <div className="slots-grid-single">
-              {timeSlots.map((slot, index) => {
-                const isBooked = isSlotBooked(slot);
-                return (
-                  <button
-                    key={index}
-                    className={`slot-card ${
-                      selectedSlot?.start === slot.start ? 'selected' : ''
-                    } ${isBooked ? 'booked' : ''}`}
-                    onClick={() => handleSlotClick(slot)}
-                    disabled={isBooked}
-                  >
-                    {slot.display}
-                    {isBooked && <span className="booked-badge">Booked</span>}
-                  </button>
-                );
-              })}
-            </div>
+        {/* Slot Selection */}
+        <div className="slots-section">
+          <h3 className="section-title">Available Slots</h3>
+          <div className="slots-grid">
+            {availableSlots.map((slot, idx) => (
+              <div
+                key={idx}
+                className={`slot-card ${selectedSlot === slot ? 'selected' : ''}`}
+                onClick={() => setSelectedSlot(slot)}
+              >
+                {slot}
+              </div>
+            ))}
           </div>
-        )}
+        </div>
 
-        {/* Upload Section */}
+        {/* Upload Payment Screenshot */}
         <div className="upload-section">
-          <label htmlFor="upload" className="upload-label">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M12 12V4m0 0l-4 4m4-4l4 4" />
-            </svg>
-            Upload Payment Screenshot
-          </label>
+          <h3 className="section-title">Upload Payment Screenshot</h3>
           <input
             type="file"
-            id="upload"
-            accept=".jpg,.jpeg,.png"
+            accept="image/*"
             className="upload-input"
-            onChange={handleScreenshotChange}
+            id="paymentScreenshot"
+            onChange={(e) => setPaymentScreenshot(e.target.files[0])}
           />
-          {previewUrl && (
+          <label htmlFor="paymentScreenshot" className="upload-label">
+            Choose File
+          </label>
+          {paymentScreenshot && (
             <div className="upload-preview">
-              <img src={previewUrl} alt="Preview" className="preview-image" />
+              <img
+                src={URL.createObjectURL(paymentScreenshot)}
+                alt="Preview"
+                className="preview-image"
+              />
             </div>
           )}
         </div>
 
         {/* Booking Button */}
-        {selectedDate && selectedSlot && screenshot && (
-          <div className="booking-action">
-            <button 
-              className="book-button" 
-              onClick={handleMakeBooking}
-              disabled={loading}
-            >
-              {loading ? 'Processing...' : `Confirm Booking - Rs. ${groundData.groundPrice}`}
-            </button>
-          </div>
-        )}
+        <div className="booking-action">
+          <button className="book-button" onClick={handleBooking}>
+            {bookingLoading || confirmLoading ? 'Processing...' : 'Book Now'}
+          </button>
+        </div>
       </div>
     </div>
   );

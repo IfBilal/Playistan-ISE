@@ -33,7 +33,7 @@ export default function AdminPage() {
       );
 
       if (!response.ok) {
-        if (response.status === 401 || response.status === 498) {
+        if (response.status === 498) {
           navigate("/");
           return;
         }

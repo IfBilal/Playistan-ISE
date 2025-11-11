@@ -47,7 +47,7 @@ export default function ChangePassword() {
       const data = await res.json();
 
       if (!res.ok) {
-        if (data.status === 401 || data.status === 498) {
+        if (data.status === 498) {
           navigate("/");
           return;
         }
