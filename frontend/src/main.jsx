@@ -1,10 +1,7 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './index.css';
-
-// Components
-import ProtectedRoute from './ProtectedRoute.jsx';
 
 // Import all pages
 import Login from './Login.jsx';
@@ -22,82 +19,16 @@ createRoot(document.getElementById('root')).render(
   <StrictMode>
     <BrowserRouter>
       <Routes>
-        {/* Public Routes - Redirect if logged in */}
-        <Route 
-          path="/" 
-          element={
-            <ProtectedRoute requireAuth={false}>
-              <Login />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/signup" 
-          element={
-            <ProtectedRoute requireAuth={false}>
-              <SignUp />
-            </ProtectedRoute>
-          } 
-        />
+        <Route path="/" element={<Login />} />
+        <Route path="/signup" element={<SignUp />} />
         <Route path="/otp" element={<OtpVerification />} />
+        <Route path="/homepage" element={<Homepage />} />
         <Route path="/guesthome" element={<GuestHome />} />
-        
-        {/* Admin Public Routes */}
-        <Route 
-          path="/adminlogin" 
-          element={
-            <ProtectedRoute requireAuth={false} adminOnly={true}>
-              <AdminLogin />
-            </ProtectedRoute>
-          } 
-        />
-
-        {/* Protected User Routes */}
-        <Route 
-          path="/homepage" 
-          element={
-            <ProtectedRoute requireAuth={true}>
-              <Homepage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/groundbooking" 
-          element={
-            <ProtectedRoute requireAuth={true}>
-              <BookingPage />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/change-password" 
-          element={
-            <ProtectedRoute requireAuth={true}>
-              <ChangePassword />
-            </ProtectedRoute>
-          } 
-        />
-        <Route 
-          path="/add-ground" 
-          element={
-            <ProtectedRoute requireAuth={true}>
-              <AddGround />
-            </ProtectedRoute>
-          } 
-        />
-
-        {/* Protected Admin Routes */}
-        <Route 
-          path="/admin-dashboard" 
-          element={
-            <ProtectedRoute requireAuth={true} adminOnly={true}>
-              <AdminPage />
-            </ProtectedRoute>
-          } 
-        />
-
-        {/* Catch all - redirect to home */}
-        <Route path="*" element={<Navigate to="/" replace />} />
+        <Route path="/groundbooking" element={<BookingPage />} />
+        <Route path="/add-ground" element={<AddGround />} />
+        <Route path="/change-password" element={<ChangePassword />} />
+        <Route path="/adminlogin" element={<AdminLogin />} />
+        <Route path="/admin-dashboard" element={<AdminPage />} />
       </Routes>
     </BrowserRouter>
   </StrictMode>
