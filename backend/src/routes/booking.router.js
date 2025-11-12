@@ -17,8 +17,6 @@ router
   .route("/book")
   .post(verifyJWT, uploadImages.single("paymentScreenshot"), BookGround);
 
-router.route("/confirm").put(verifyJWTAdmin, confirmBooking);
-
 router.route("/confirm-bookings/:groundId").get(verifyJWTAdmin, confirmedBookings);
 
 export default router;

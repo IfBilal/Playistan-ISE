@@ -19,7 +19,6 @@ let loginAdmin = asyncHandler(async (req, res) => {
       throw new ApiError(404, "Admin not found");
     }
 
-
     let { accessToken, refreshToken } = await generateAccessAndRefreshToken(
       admin._id
     );
@@ -178,7 +177,7 @@ const rejectBooking = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Booking ID is required");
   }
 
-  let booking = Booking.findByIdAndDelete(bookingId);
+  let booking = Booking.findByIdAndDelete(bookingId, { new: true });
   if (!booking) {
     throw new ApiError(404, "Booking not found");
   }
