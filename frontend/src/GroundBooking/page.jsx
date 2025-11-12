@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
 import './page.css';
 
@@ -13,7 +13,8 @@ const BookingPage = () => {
   const [selectedSlot, setSelectedSlot] = useState('');
   const [paymentScreenshot, setPaymentScreenshot] = useState(null);
   const [bookingLoading, setBookingLoading] = useState(false);
-  const [confirmLoading, setConfirmLoading] = useState(false);
+  const [bookingMessage, setBookingMessage] = useState(null);
+  const [bookedSlots, setBookedSlots] = useState([]); // State to store booked times
 
   // Generate dates dynamically: today + next 7 days
   const generateDates = (numDays = 7) => {
@@ -31,14 +32,52 @@ const BookingPage = () => {
 
   const availableDates = generateDates(7);
 
+  // --- SLOT AVAILABILITY LOGIC ---
+  const fetchBookedSlots = async (date) => {
+    if (!date || !groundId) return;
+
+    try {
+      // Calls your backend route to get confirmed bookings for this ground/date
+      const url = `${import.meta.env.VITE_BACKEND_URL}/api/v1/bookings/${groundId}/${date}`;
+      const response = await fetch(url, { credentials: 'include' });
+      
+      if (!response.ok && response.status !== 404) {
+        throw new Error('Failed to fetch booked slots');
+      }
+
+      const data = await response.json();
+      
+      if (data.data) {
+        // Map the bookings to just the time slot string (e.g., "10:00 - 11:00")
+        const slots = data.data.map(b => `${b.startTime} - ${b.endTime}`);
+        setBookedSlots(slots);
+      } else {
+         setBookedSlots([]);
+      }
+    } catch (err) {
+      console.error('Error fetching booked slots:', err);
+    }
+  };
+
+  const isBooked = (slot) => bookedSlots.includes(slot);
+
+  // Re-fetch booked slots whenever the selected date changes
+  useEffect(() => {
+    if (selectedDate && groundId) {
+      fetchBookedSlots(selectedDate);
+    }
+    setSelectedSlot(''); // Clear slot selection when date changes
+  }, [selectedDate, groundId]);
+
+  // --- GROUND DATA FETCH ---
   useEffect(() => {
     if (!ground && groundId) fetchGround();
-  }, [groundId]);
+  }, [groundId, ground]);
 
   const fetchGround = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`http://localhost:8000/api/v1/grounds/${groundId}`);
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/grounds/${groundId}`); 
       const data = await res.json();
       if (res.ok && data.data) setGround(data.data);
     } catch (err) {
@@ -70,8 +109,13 @@ const BookingPage = () => {
 
   const handleBooking = async () => {
     if (!selectedDate || !selectedSlot || !paymentScreenshot) {
-      alert('Select a date, slot, and upload payment screenshot.');
+      setBookingMessage({ type: 'error', text: 'Select date, slot, and upload screenshot.' });
       return;
+    }
+
+    if (isBooked(selectedSlot)) {
+       setBookingMessage({ type: 'error', text: 'This slot is already booked. Choose another.' });
+       return;
     }
 
     const [startTime, endTime] = selectedSlot.split(' - ');
@@ -84,28 +128,31 @@ const BookingPage = () => {
 
     try {
       setBookingLoading(true);
-      const res = await fetch('http://localhost:8000/api/v1/bookings/book', {
+      setBookingMessage(null);
+
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/bookings/book`, {
         method: 'POST',
         body: formData,
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-        credentials: 'include', // <<< FIXED: send cookies for refresh token
+        credentials: 'include',
       });
+      
       const data = await res.json();
-      if(res.status === 498){
-        navigate('/');
+
+      if(res.status === 498 || res.status === 401){
+        navigate('/login'); // Redirect to login on auth failure
         return;
       }
+
       if (res.ok) {
-        alert('Booking created. Confirming...');
-  
+        setBookingMessage({ type: 'success', text: 'Booking request sent! Awaiting admin confirmation.' });
+        // After successful booking, refetch the booked slots to disable the one just booked
+        fetchBookedSlots(selectedDate);
       } else {
-        alert(data.message || 'Booking failed.');
+        setBookingMessage({ type: 'error', text: data.message || 'Booking failed.' });
       }
     } catch (err) {
       console.error('Booking error:', err);
-      alert('Booking failed.');
+      setBookingMessage({ type: 'error', text: 'Network error. Could not connect to server.' });
     } finally {
       setBookingLoading(false);
     }
@@ -135,7 +182,7 @@ const BookingPage = () => {
               <div className="meta-item">Price: Rs. {ground.basePrice}</div>
             </div>
             {ground.rules && (
-              <div className="rules-section" style={{ marginTop: '20px', color: '#A7F3D0' }}>
+              <div className="rules-section">
                 <h3 className="section-title">Rules</h3>
                 <p>{ground.rules}</p>
               </div>
@@ -164,7 +211,11 @@ const BookingPage = () => {
               <div
                 key={idx}
                 className={`date-card ${selectedDate === d.date ? 'selected' : ''}`}
-                onClick={() => setSelectedDate(d.date)}
+                onClick={() => {
+                  if (selectedDate !== d.date) {
+                    setSelectedDate(d.date);
+                  }
+                }}
               >
                 <div className="date-day">{d.day}</div>
                 <div className="date-number">{d.date.split('-')[2]}</div>
@@ -177,15 +228,20 @@ const BookingPage = () => {
         <div className="slots-section">
           <h3 className="section-title">Available Slots</h3>
           <div className="slots-grid">
-            {availableSlots.map((slot, idx) => (
-              <div
-                key={idx}
-                className={`slot-card ${selectedSlot === slot ? 'selected' : ''}`}
-                onClick={() => setSelectedSlot(slot)}
-              >
-                {slot}
-              </div>
-            ))}
+            {availableSlots.map((slot, idx) => {
+              const booked = isBooked(slot);
+              return (
+                <div
+                  key={idx}
+                  // Apply 'booked' class if slot is taken
+                  className={`slot-card ${selectedSlot === slot ? 'selected' : ''} ${booked ? 'booked' : ''}`}
+                  onClick={() => !booked && setSelectedSlot(slot)} // Prevent clicking if booked
+                >
+                  {slot}
+                  {booked && <span className="booked-text">BOOKED</span>}
+                </div>
+              );
+            })}
           </div>
         </div>
 
@@ -200,7 +256,8 @@ const BookingPage = () => {
             onChange={(e) => setPaymentScreenshot(e.target.files[0])}
           />
           <label htmlFor="paymentScreenshot" className="upload-label">
-            Choose File
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M4 14.9V12c0-.9.7-1.6 1.6-1.6h12.8c.9 0 1.6.7 1.6 1.6v2.9M12 20.8V15M9 18h6M16 10l-4-4-4 4"/></svg>
+            {paymentScreenshot ? paymentScreenshot.name : 'Choose File'}
           </label>
           {paymentScreenshot && (
             <div className="upload-preview">
@@ -212,11 +269,21 @@ const BookingPage = () => {
             </div>
           )}
         </div>
-
-        {/* Booking Button */}
+        
+        {/* Booking Button & Message */}
         <div className="booking-action">
-          <button className="book-button" onClick={handleBooking}>
-            {bookingLoading || confirmLoading ? 'Processing...' : 'Book Now'}
+          {bookingMessage && (
+             <div className={`message ${bookingMessage.type}`}>
+               {bookingMessage.text}
+             </div>
+          )}
+          <button 
+            className="book-button" 
+            onClick={handleBooking}
+            // Disable if loading, no date/slot selected, or no screenshot uploaded
+            disabled={bookingLoading || !selectedSlot || !selectedDate || !paymentScreenshot}
+          >
+            {bookingLoading ? 'Processing Request...' : 'Book Now'}
           </button>
         </div>
       </div>

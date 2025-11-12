@@ -77,9 +77,11 @@ export default function AdminPage() {
           body: JSON.stringify({ bookingId }),
         }
       );
+      console.log(response);
+      
 
       if (!response.ok) {
-        if (response.status === 498 || response.status === 401) {
+        if (response.status === 498 || response.status === 400) {
           navigate("/adminlogin");
           return;
         }
