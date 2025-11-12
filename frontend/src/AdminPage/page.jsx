@@ -123,13 +123,14 @@ export default function AdminPage() {
       );
 
       if (!response.ok) {
-         if (response.status === 498 || response.status === 401) {
+        //  if (response.status === 498 || response.status === 401) {
           navigate("/adminlogin");
-          return;
-        }
+          // return;
+        // }
         throw new Error("Failed to reject booking");
       }
-
+      console.log(response);
+      
       // Remove from pending list
       setPendingBookings(prev => prev.filter(b => b._id !== bookingId));
       alert("Booking rejected successfully!"); 
@@ -242,7 +243,7 @@ export default function AdminPage() {
                     </button>
                     <button 
                       className="btn-reject"
-                      onClick={() => handleReject(booking._id, booking.userId?.name)}
+                      onClick={() => handleReject(booking._id, booking.userId.name)}
                     >
                       Reject
                     </button>
