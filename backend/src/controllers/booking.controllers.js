@@ -59,7 +59,7 @@ const confirmBooking = asyncHandler(async (req, res) => {
   }
   booking.status = "confirmed";
   await booking.save();
-  res.status(200).json(new ApiResponse(200, booking));
+  res.status(200).json(new ApiResponse(200, booking," slot confirmed successfully"));
 });
 
 const bookedGrounds = asyncHandler(async (req, res) => {
