@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "./page.css"; // Correct: Sibling file
+import "./page.css"; // Imports the new CSS
 
 export default function AdminPage() {
   const [pendingBookings, setPendingBookings] = useState([]);
   const [confirmedBookings, setConfirmedBookings] = useState([]);
+  const [groundName, setGroundName] = useState("Your Venue"); // Placeholder
   const [loading, setLoading] = useState(true);
   const [screenshotModal, setScreenshotModal] = useState(null);
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ export default function AdminPage() {
       document.body.style.minHeight = "";
       document.body.style.margin = "";
     };
-  }, []); // Removed navigate dependency to prevent re-fetch on state change
+  }, []); // Empty dependency array, runs only once
 
   const fetchBookings = async () => {
     setLoading(true);
@@ -38,7 +39,6 @@ export default function AdminPage() {
 
       if (!response.ok) {
         if (response.status === 498 || response.status === 401) {
-          // Token expired or invalid, redirect to login
           console.error("Session expired, redirecting to login");
           navigate("/adminlogin");
           return;
@@ -47,18 +47,18 @@ export default function AdminPage() {
       }
 
       const data = await response.json();
-      
-      // Your backend route /pending-bookings only returns pending ones.
-      const allBookings = data.data || [];
-      const pending = allBookings.filter(b => b.status === "pending");
-      const confirmed = allBookings.filter(b => b.status === "confirmed");
+      const pending = data.data || [];
       
       setPendingBookings(pending);
-      setConfirmedBookings(confirmed); // This will be empty on first load
+      setConfirmedBookings([]); // Clear confirmed on refresh, as we only fetch pending
+
+      // Set the ground name from the first booking (if available)
+      if (pending.length > 0 && pending[0].groundId?.name) {
+        setGroundName(pending[0].groundId.name);
+      }
 
     } catch (error) {
       console.error("Error fetching bookings:", error);
-      // You can add a user-facing error message here
     } finally {
       setLoading(false);
     }
@@ -92,7 +92,9 @@ export default function AdminPage() {
       setPendingBookings(prev => prev.filter(b => b._id !== bookingId));
       setConfirmedBookings(prev => [...prev, data.data]);
       
-      alert("Booking confirmed successfully!"); // You can replace this with a toast/modal
+      // You can replace this with a styled toast/modal
+      alert("Booking confirmed successfully!"); 
+
     } catch (error) {
       console.error("Error confirming booking:", error);
       alert("Failed to confirm booking. Please try again.");
@@ -100,7 +102,7 @@ export default function AdminPage() {
   };
 
   const handleReject = async (bookingId, userName) => {
-    // Replace window.confirm with a custom modal for better UI
+    // You should replace this with a custom modal for better UI
     if (!confirm(`Are you sure you want to reject ${userName}'s booking?`)) {
       return;
     }
@@ -128,7 +130,7 @@ export default function AdminPage() {
 
       // Remove from pending list
       setPendingBookings(prev => prev.filter(b => b._id !== bookingId));
-      alert("Booking rejected successfully!"); // You can replace this with a toast/modal
+      alert("Booking rejected successfully!"); 
     } catch (error) {
       console.error("Error rejecting booking:", error);
       alert("Failed to reject booking. Please try again.");
@@ -157,10 +159,12 @@ export default function AdminPage() {
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { 
-      year: 'numeric', 
-      month: 'short', 
-      day: 'numeric' 
+    // Use PKT time, format: 12-Nov-2025
+    return date.toLocaleDateString('en-GB', { 
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+      timeZone: 'Asia/Karachi'
     });
   };
 
@@ -168,7 +172,6 @@ export default function AdminPage() {
     return (
       <div className="admin-dashboard">
         <div className="dashboard-container">
-          {/* You should replace this with a real spinner component */}
           <div className="loading-spinner">Loading Dashboard...</div>
         </div>
       </div>
@@ -180,6 +183,7 @@ export default function AdminPage() {
       <div className="dashboard-container">
         <div className="dashboard-header">
           <h1>Admin Dashboard</h1>
+          <p className="venue-name">{groundName}</p>
           <button className="logout-btn" onClick={handleLogout}>
             Logout
           </button>
@@ -213,10 +217,6 @@ export default function AdminPage() {
                         <span className="info-label">Email:</span>
                         <span className="info-text">{booking.userId?.email || 'N/A'}</span>
                       </div>
-                      <div className="info-row">
-                        <span className="info-label">Ground:</span>
-                        <span className="info-text">{booking.groundId?.name || 'N/A'}</span>
-                      </div>
                     </div>
 
                     <div className="booking-amount">
@@ -230,19 +230,19 @@ export default function AdminPage() {
                       className="btn-screenshot"
                       onClick={() => handleViewScreenshot(booking.screenshot)}
                     >
-                      VIEW SCREENSHOT
+                      View Screenshot
                     </button>
                     <button 
                       className="btn-confirm"
                       onClick={() => handleConfirm(booking._id)}
                     >
-                      CONFIRM
+                      Confirm
                     </button>
                     <button 
                       className="btn-reject"
                       onClick={() => handleReject(booking._id, booking.userId?.name)}
                     >
-                      REJECT
+                      Reject
                     </button>
                   </div>
                 </div>
@@ -279,16 +279,17 @@ export default function AdminPage() {
                         <span className="info-label">Email:</span>
                         <span className="info-text">{booking.userId?.email || 'N/A'}</span>
                       </div>
-                      <div className="info-row">
-                        <span className="info-label">Ground:</span>
-                        <span className="info-text">{booking.groundId?.name || 'N/A'}</span>
-                      </div>
+                    </div>
+
+                    <div className="booking-amount">
+                      <div className="amount-label">Amount:</div>
+                      <div className="amount-value">PKR {booking.price}</div>
                     </div>
                   </div>
 
                   <div className="booking-actions">
                     <button className="btn-confirmed" disabled>
-                      ✓ CONFIRMED
+                      ✓ Confirmed
                     </button>
                   </div>
                 </div>
