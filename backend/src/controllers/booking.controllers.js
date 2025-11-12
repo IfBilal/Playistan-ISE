@@ -74,4 +74,17 @@ const bookedGrounds = asyncHandler(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, bookings, "Bookings retrieved successfully"));
 });
-export { BookGround, confirmBooking, bookedGrounds };
+
+const confirmedBookings = asyncHandler(async (req, res) => {
+  const { groundId } = req.query;
+
+  if (!groundId) {
+    throw new ApiError(400, "Ground ID is required");
+  }
+
+  const bookings = await Booking.find({ groundId, status: "confirmed" });
+  res
+    .status(200)
+    .json(new ApiResponse(200, bookings, "Bookings retrieved successfully"));
+});
+export { BookGround, confirmBooking, bookedGrounds, confirmedBookings };
