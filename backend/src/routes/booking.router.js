@@ -1,7 +1,6 @@
 import { Router } from "express";
 import {
   bookedGrounds,
-  confirmBooking,
   BookGround,
   confirmedBookings,
 } from "../controllers/booking.controllers.js";
@@ -17,6 +16,8 @@ router
   .route("/book")
   .post(verifyJWT, uploadImages.single("paymentScreenshot"), BookGround);
 
-router.route("/confirm-bookings/:groundId").get(verifyJWTAdmin, confirmedBookings);
+router
+  .route("/confirm-bookings/:groundId")
+  .get(verifyJWTAdmin, confirmedBookings);
 
 export default router;
