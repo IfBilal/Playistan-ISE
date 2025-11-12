@@ -9,7 +9,7 @@ const groundSchema = new Schema(
     },
     owner: {
       type: Schema.Types.ObjectId,
-      ref: "User",
+      ref: "Admin",
       required: true,
     },
     description: {
