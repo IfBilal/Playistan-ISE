@@ -14,16 +14,11 @@ let loginAdmin = asyncHandler(async (req, res) => {
 
   let admin;
   try {
-    admin = await Admin.findOne({ username });
+    admin = await Admin.findOne({ username, password });
     if (!admin) {
       throw new ApiError(404, "Admin not found");
     }
 
-    let passwordCorrect = await admin.isPasswordCorrect(password);
-
-    if (!passwordCorrect) {
-      throw new ApiError(400, "Wrong password");
-    }
 
     let { accessToken, refreshToken } = await generateAccessAndRefreshToken(
       admin._id

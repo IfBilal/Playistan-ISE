@@ -27,14 +27,6 @@ const adminSchema = new Schema(
   { timestamps: true }
 );
 
-adminSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
-  this.password = await bcrypt.hash(this.password, 12);
-});
-
-adminSchema.methods.isPasswordCorrect = async function (password) {
-  return await bcrypt.compare(password, this.password);
-};
 
 adminSchema.methods.generateAccessToken = function () {
   return jwt.sign(
