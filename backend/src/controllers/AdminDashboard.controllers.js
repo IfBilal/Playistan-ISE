@@ -177,7 +177,7 @@ const rejectBooking = asyncHandler(async (req, res) => {
     throw new ApiError(400, "Booking ID is required");
   }
 
-  let booking = Booking.findByIdAndDelete(bookingId, { new: true });
+  let booking = await Booking.findByIdAndDelete(bookingId, { new: true });
   if (!booking) {
     throw new ApiError(404, "Booking not found");
   }
