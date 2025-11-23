@@ -1,60 +1,92 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import "./page.css"; // Imports the new CSS
+import "./page.css";
 
 export default function AdminPage() {
   const [pendingBookings, setPendingBookings] = useState([]);
   const [confirmedBookings, setConfirmedBookings] = useState([]);
-  const [groundName, setGroundName] = useState("Your Venue"); // Placeholder
+  const [groundName, setGroundName] = useState("Your Venue");
+  const [groundId, setGroundId] = useState(null); // Store ground ID
   const [loading, setLoading] = useState(true);
   const [screenshotModal, setScreenshotModal] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Custom styles for this page
     document.body.style.background = "radial-gradient(circle at top left, #001a0f 0%, #000a05 50%, #001505 100%)";
     document.body.style.minHeight = "100vh";
     document.body.style.margin = "0";
     
     fetchBookings();
 
-    // Cleanup function to reset body style when component unmounts
     return () => {
       document.body.style.background = "";
       document.body.style.minHeight = "";
       document.body.style.margin = "";
     };
-  }, []); // Empty dependency array, runs only once
+  }, []);
 
   const fetchBookings = async () => {
     setLoading(true);
     try {
-      const response = await fetch(
+      // Fetch pending bookings
+      const pendingResponse = await fetch(
         `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/pending-bookings`,
         {
           method: "GET",
-          credentials: "include", // Important for sending cookies
+          credentials: "include",
         }
       );
 
-      if (!response.ok) {
-        if (response.status === 498 || response.status === 401) {
+      if (!pendingResponse.ok) {
+        if (pendingResponse.status === 498 || pendingResponse.status === 401) {
           console.error("Session expired, redirecting to login");
           navigate("/adminlogin");
           return;
         }
-        throw new Error("Failed to fetch bookings");
+        throw new Error("Failed to fetch pending bookings");
       }
 
-      const data = await response.json();
-      const pending = data.data || [];
+      const pendingData = await pendingResponse.json();
+      const pending = pendingData.data || [];
       
-      setPendingBookings(pending);
-      setConfirmedBookings([]); // Clear confirmed on refresh, as we only fetch pending
+      // Extract ground ID from first booking
+      let currentGroundId = groundId;
+      if (pending.length > 0 && pending[0].groundId) {
+        currentGroundId = pending[0].groundId._id || pending[0].groundId;
+        setGroundId(currentGroundId);
+        if (pending[0].groundId?.name) {
+          setGroundName(pending[0].groundId.name);
+        }
+      }
 
-      // Set the ground name from the first booking (if available)
-      if (pending.length > 0 && pending[0].groundId?.name) {
-        setGroundName(pending[0].groundId.name);
+      setPendingBookings(pending);
+
+      // Fetch confirmed bookings if we have a ground ID
+      if (currentGroundId) {
+        try {
+          const confirmedResponse = await fetch(
+            `${import.meta.env.VITE_BACKEND_URL}/api/v1/bookings/confirm-bookings/${currentGroundId}`,
+            {
+              method: "GET",
+              credentials: "include",
+            }
+          );
+
+          if (confirmedResponse.ok) {
+            const confirmedData = await confirmedResponse.json();
+            const confirmed = confirmedData.data || [];
+            setConfirmedBookings(confirmed);
+            
+            // Update ground name if we didn't get it from pending bookings
+            if (!groundName && confirmed.length > 0 && confirmed[0].groundId?.name) {
+              setGroundName(confirmed[0].groundId.name);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching confirmed bookings:", error);
+          // Don't fail the whole page if confirmed bookings fail
+          setConfirmedBookings([]);
+        }
       }
 
     } catch (error) {
@@ -77,8 +109,6 @@ export default function AdminPage() {
           body: JSON.stringify({ bookingId }),
         }
       );
-      console.log(response);
-      
 
       if (!response.ok) {
         if (response.status === 498 || response.status === 400) {
@@ -94,8 +124,7 @@ export default function AdminPage() {
       setPendingBookings(prev => prev.filter(b => b._id !== bookingId));
       setConfirmedBookings(prev => [...prev, data.data]);
       
-      // You can replace this with a styled toast/modal
-      alert("Booking confirmed successfully!"); 
+      alert("Booking confirmed successfully!");
 
     } catch (error) {
       console.error("Error confirming booking:", error);
@@ -104,7 +133,6 @@ export default function AdminPage() {
   };
 
   const handleReject = async (bookingId, userName) => {
-    // You should replace this with a custom modal for better UI
     if (!confirm(`Are you sure you want to reject ${userName}'s booking?`)) {
       return;
     }
@@ -123,17 +151,13 @@ export default function AdminPage() {
       );
 
       if (!response.ok) {
-        //  if (response.status === 498 || response.status === 401) {
-          navigate("/adminlogin");
-          // return;
-        // }
+        navigate("/adminlogin");
         throw new Error("Failed to reject booking");
       }
-      console.log(response);
       
       // Remove from pending list
       setPendingBookings(prev => prev.filter(b => b._id !== bookingId));
-      alert("Booking rejected successfully!"); 
+      alert("Booking rejected successfully!");
     } catch (error) {
       console.error("Error rejecting booking:", error);
       alert("Failed to reject booking. Please try again.");
@@ -156,14 +180,13 @@ export default function AdminPage() {
       navigate("/adminlogin");
     } catch (error) {
       console.error("Logout error:", error);
-      navigate("/adminlogin"); // Force logout even if API call fails
+      navigate("/adminlogin");
     }
   };
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
-    // Use PKT time, format: 12-Nov-2025
-    return date.toLocaleDateString('en-GB', { 
+    return date.toLocaleDateString('en-GB', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
@@ -243,7 +266,7 @@ export default function AdminPage() {
                     </button>
                     <button 
                       className="btn-reject"
-                      onClick={() => handleReject(booking._id, booking.userId.name)}
+                      onClick={() => handleReject(booking._id, booking.userId?.name)}
                     >
                       Reject
                     </button>

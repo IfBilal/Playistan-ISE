@@ -215,7 +215,7 @@
   box-shadow: 0 6px 12px rgba(74, 222, 128, 0.4);
 }
 
-/* --- BOOKED STATE FIX (Solid Red) --- */
+/* --- BOOKED STATE (Solid Red) --- */
 .slot-card.booked {
   background: #73000f; /* Solid Dark Red Background */
   border: 2px solid #ff4d4d; /* Bright Red Border */

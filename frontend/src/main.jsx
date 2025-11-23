@@ -23,6 +23,9 @@ import GroundBooking from './GroundBooking/page.jsx';
 import AdminPage from './AdminPage/page.jsx';
 import AddGround from './AddGround/page.jsx';
 
+// Chat Page
+import Chat from './Chat/page.jsx';
+
 const Main = () => {
   return (
     <BrowserRouter>
@@ -50,6 +53,9 @@ const Main = () => {
 
         {/* Add Ground Request Page */}
         <Route path="/addground" element={<AddGround />} />
+
+        {/* Chat Page */}
+        <Route path="/chat" element={<Chat />} />
       </Routes>
     </BrowserRouter>
   );
