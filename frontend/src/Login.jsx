@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "./contexts/LanguageContext.jsx";
 import "./Login.css";
 
 const Login = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -72,22 +74,22 @@ const Login = () => {
 
       <div className="login-card">
         <h1 className="login-title">Playistan</h1>
-        <p className="login-subtitle">Sign in to your account</p>
+        <p className="login-subtitle">{t('signInToAccount')}</p>
 
         {error && <div className="error-message">{error}</div>}
 
         <form className="login-form" onSubmit={handleLogin}>
-          <label>Username</label>
+          <label>{t('username')}</label>
           <input
             type="text"
             name="username"
-            placeholder="Enter your username"
+            placeholder={t('enterUsername')}
             value={formData.username}
             onChange={handleChange}
             required
           />
 
-          <label>Password</label>
+          <label>{t('password')}</label>
           <input
             type="password"
             name="password"
@@ -98,7 +100,7 @@ const Login = () => {
           />
 
           <button type="submit" className="login-btn" disabled={loading}>
-            {loading ? "Signing In..." : "Sign In"}
+            {loading ? t('signingIn') : t('signIn')}
           </button>
 
           <button 
@@ -106,14 +108,14 @@ const Login = () => {
             className="guest-btn" 
             onClick={handleGuestAccess}
           >
-            Continue as Guest
+            {t('continueAsGuest')}
           </button>
         </form>
 
         <p className="signup-text">
-          Don't have an account?{" "}
+          {t('dontHaveAccount')}{" "}
           <a href="#" onClick={handleSignUp}>
-            Sign Up
+            {t('signUpHere')}
           </a>
         </p>
       </div>

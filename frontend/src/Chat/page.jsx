@@ -2,11 +2,13 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
 import { useTheme } from '../contexts/ThemeContext.jsx';
+import { useLanguage } from '../contexts/LanguageContext.jsx';
 import './page.css';
 
 const Chat = () => {
   const navigate = useNavigate();
   const { theme, toggleTheme } = useTheme();
+  const { t } = useLanguage();
   const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -390,10 +392,10 @@ const Chat = () => {
         </button>
         
         <div className="chat-header-info">
-          <h1>Playistan Community</h1>
+          <h1>{t('community')}</h1>
           <p className="online-count">
             <span className="pulse-dot"></span>
-            {onlineUsers.length} members active
+            {onlineUsers.length} {t('membersActive')}
           </p>
         </div>
 
@@ -431,8 +433,8 @@ const Chat = () => {
             <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            <h3>No messages yet</h3>
-            <p>Be the first to start the conversation!</p>
+            <h2>{t('noMessages')}</h2>
+            <p>{t('beFirst')}</p>
           </div>
         ) : (
           messages.map((msg) => (
@@ -485,7 +487,7 @@ const Chat = () => {
 
         {typingUsers.length > 0 && (
           <div className="typing-indicator">
-            <span>{typingUsers.join(', ')} {typingUsers.length > 1 ? 'are' : 'is'} typing</span>
+            <span>{typingUsers.join(', ')} {typingUsers.length > 1 ? t('areTyping') : t('typing')}</span>
             <div className="typing-dots">
               <span></span>
               <span></span>
@@ -565,7 +567,7 @@ const Chat = () => {
         <input
           type="text"
           className="message-input"
-          placeholder="Type a message..."
+          placeholder={t('typeMessage')}
           value={inputMessage}
           onChange={handleTyping}
           disabled={uploadingMedia}

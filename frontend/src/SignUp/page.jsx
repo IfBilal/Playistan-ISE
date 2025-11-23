@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
 import "./Page.css";
 
 const SignUp = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -66,32 +68,32 @@ const SignUp = () => {
 
       <div className="signup-card">
         <h1 className="signup-title">Playistan</h1>
-        <p className="signup-subtitle">Create your account</p>
+        <p className="signup-subtitle">{t('signup')}</p>
 
         {error && <div className="error-message">{error}</div>}
 
         <form className="signup-form" onSubmit={handleSignUp}>
-          <label>Username</label>
+          <label>{t('username')}</label>
           <input
             type="text"
             name="username"
-            placeholder="Enter your username"
+            placeholder={t('enterUsername')}
             value={formData.username}
             onChange={handleChange}
             required
           />
 
-          <label>Email</label>
+          <label>{t('email')}</label>
           <input
             type="email"
             name="email"
-            placeholder="your@email.com"
+            placeholder={t('enterEmail')}
             value={formData.email}
             onChange={handleChange}
             required
           />
 
-          <label>Password</label>
+          <label>{t('password')}</label>
           <input
             type="password"
             name="password"
@@ -102,14 +104,14 @@ const SignUp = () => {
           />
 
           <button type="submit" className="signup-btn" disabled={loading}>
-            {loading ? "Creating Account..." : "Create Account"}
+            {loading ? t('loading') : t('signup')}
           </button>
         </form>
 
         <p className="login-text">
-          Already have an account?{" "}
+          {t('alreadyHaveAccount')}{" "}
           <a href="#" onClick={handleBackToLogin}>
-            Sign In
+            {t('signInHere')}
           </a>
         </p>
       </div>
