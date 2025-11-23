@@ -9,7 +9,7 @@ import {
   getOnlineUsers,
 } from "../controllers/chat.controllers.js";
 import { verifyJWT } from "../middlewares/auth.middleware.js";
-import { uploadImages,uploadVideos } from "../middlewares/multer.middleware.js";
+import { uploadImages, uploadVideos } from "../middlewares/multer.middleware.js";
 
 const router = Router();
 

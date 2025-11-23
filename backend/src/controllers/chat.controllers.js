@@ -167,7 +167,7 @@ const deleteMessage = asyncHandler(async (req, res) => {
   await message.save();
 
   const io = req.app.get("io");
-  io.emit("message:deleted", { messageId });
+  io.to("community-chat").emit("message:deleted", { messageId });
 
   res
     .status(200)
