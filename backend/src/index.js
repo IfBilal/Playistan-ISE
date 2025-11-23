@@ -17,6 +17,18 @@ const io = new Server(httpServer, {
     origin: process.env.CORS_ORIGIN,
     credentials: true,
   },
+  allowRequest: (req, callback) => {
+    // Parse cookies for socket.io
+    const cookies = {};
+    if (req.headers.cookie) {
+      req.headers.cookie.split(';').forEach(cookie => {
+        const [name, value] = cookie.trim().split('=');
+        cookies[name] = value;
+      });
+    }
+    req.cookies = cookies;
+    callback(null, true);
+  },
 });
 
 app.set("io", io);

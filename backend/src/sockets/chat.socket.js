@@ -10,7 +10,8 @@ export const initializeChatSocket = (io) => {
       const token =
         socket.handshake.auth.token ||
         socket.handshake.headers.authorization?.replace("Bearer ", "") ||
-        socket.handshake.query.token;
+        socket.handshake.query.token ||
+        socket.request.cookies?.accessToken; // Add cookie support
 
       if (!token) {
         console.log("Socket connection rejected: No token provided");

@@ -21,17 +21,8 @@ const Chat = () => {
   const videoInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
-  // Get access token from cookies
-  const getAccessToken = () => {
-    const cookies = document.cookie.split('; ');
-    const tokenCookie = cookies.find(c => c.startsWith('accessToken='));
-    return tokenCookie ? tokenCookie.split('=')[1] : null;
-  };
-
   // Initialize socket connection
   useEffect(() => {
-    const token = getAccessToken();
-    
     // Get current user from localStorage
     const userStr = localStorage.getItem('user');
     
@@ -52,11 +43,10 @@ const Chat = () => {
       return;
     }
 
-    // Connect to socket (token from cookie will be sent automatically)
+    // Connect to socket with credentials (cookies will be sent automatically)
     const newSocket = io(import.meta.env.VITE_BACKEND_URL, {
-      auth: { token: token || '' },
-      transports: ['websocket'],
-      withCredentials: true,
+      transports: ['websocket', 'polling'],
+      withCredentials: true, // This sends cookies automatically
     });
 
     newSocket.on('connect', () => {
@@ -65,9 +55,12 @@ const Chat = () => {
     });
 
     newSocket.on('connect_error', (error) => {
-      console.error('Connection error:', error);
-      // Don't alert or redirect, just log
-      console.log('Socket connection failed. Token might be invalid.');
+      console.error('Connection error:', error.message);
+      // Token might be invalid or expired
+      if (error.message.includes('Authentication') || error.message.includes('token')) {
+        alert('Session expired. Please login again.');
+        navigate('/');
+      }
     });
 
     setSocket(newSocket);
