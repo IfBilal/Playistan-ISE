@@ -1,9 +1,10 @@
 /* Homepage Container */
 .homepage-container {
   min-height: 100vh;
-  background: linear-gradient(135deg, #001a0f 0%, #000a05 50%, #001505 100%);
+  background: linear-gradient(135deg, var(--bg-gradient-start, #001a0f) 0%, var(--bg-gradient-mid, #000a05) 50%, var(--bg-gradient-end, #001505) 100%);
   position: relative;
   overflow-x: hidden;
+  transition: background 0.3s ease;
 }
 
 /* Loading */
@@ -13,9 +14,10 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  background: linear-gradient(135deg, #001a0f 0%, #000a05 50%, #001505 100%);
-  color: #4ADE80;
+  background: linear-gradient(135deg, var(--bg-gradient-start, #001a0f) 0%, var(--bg-gradient-mid, #000a05) 50%, var(--bg-gradient-end, #001505) 100%);
+  color: var(--primary-color, #4ADE80);
   gap: 20px;
+  transition: background 0.3s ease;
 }
 
 .loading-spinner {
@@ -33,13 +35,14 @@
 
 /* Header */
 .homepage-header {
-  background: rgba(0, 26, 15, 0.8);
+  background: var(--header-bg, rgba(0, 26, 15, 0.8));
   backdrop-filter: blur(10px);
   padding: 20px 0;
   position: sticky;
   top: 0;
   z-index: 100;
-  border-bottom: 1px solid rgba(74, 222, 128, 0.1);
+  border-bottom: 1px solid var(--border-color-strong, rgba(74, 222, 128, 0.1));
+  transition: all 0.3s ease;
 }
 
 .header-content {
@@ -54,7 +57,7 @@
 .homepage-logo {
   font-size: 32px;
   font-weight: 800;
-  background: linear-gradient(135deg, #4ADE80 0%, #22C55E 100%);
+  background: linear-gradient(135deg, var(--primary-color, #4ADE80) 0%, var(--primary-hover, #22C55E) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

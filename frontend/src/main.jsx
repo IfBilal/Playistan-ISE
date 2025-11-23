@@ -2,6 +2,8 @@ import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import './index.css';
+import { ThemeProvider } from './contexts/ThemeContext.jsx';
+import ThemeToggle from './components/ThemeToggle.jsx';
 
 // Auth Pages (All are siblings to main.jsx)
 import Login from './Login.jsx';
@@ -28,36 +30,39 @@ import Chat from './Chat/page.jsx';
 
 const Main = () => {
   return (
-    <BrowserRouter>
-      <Routes>
-        {/* Default Login Route */}
-        <Route path="/" element={<Login />} />
+    <ThemeProvider>
+      <BrowserRouter>
+        <ThemeToggle />
+        <Routes>
+          {/* Default Login Route */}
+          <Route path="/" element={<Login />} />
 
-        {/* Auth Routes */}
-        <Route path="/signup" element={<SignUp />} />
-        <Route path="/otp" element={<OtpVerification />} />
-        <Route path="/changepass" element={<ChangePass />} />
-        <Route path="/adminlogin" element={<AdminLogin />} />
+          {/* Auth Routes */}
+          <Route path="/signup" element={<SignUp />} />
+          <Route path="/otp" element={<OtpVerification />} />
+          <Route path="/changepass" element={<ChangePass />} />
+          <Route path="/adminlogin" element={<AdminLogin />} />
 
-        {/* Guest Landing Page */}
-        <Route path="/guesthome" element={<GuestHome />} />
+          {/* Guest Landing Page */}
+          <Route path="/guesthome" element={<GuestHome />} />
 
-        {/* Logged-in Homepage */}
-        <Route path="/homepage" element={<Homepage />} />
+          {/* Logged-in Homepage */}
+          <Route path="/homepage" element={<Homepage />} />
 
-        {/* Ground Booking Page */}
-        <Route path="/groundbooking/:groundId" element={<GroundBooking />} />
+          {/* Ground Booking Page */}
+          <Route path="/groundbooking/:groundId" element={<GroundBooking />} />
 
-        {/* Admin Dashboard Route */}
-        <Route path="/adminpage" element={<AdminPage />} />
+          {/* Admin Dashboard Route */}
+          <Route path="/adminpage" element={<AdminPage />} />
 
-        {/* Add Ground Request Page */}
-        <Route path="/addground" element={<AddGround />} />
+          {/* Add Ground Request Page */}
+          <Route path="/addground" element={<AddGround />} />
 
-        {/* Chat Page */}
-        <Route path="/chat" element={<Chat />} />
-      </Routes>
-    </BrowserRouter>
+          {/* Chat Page */}
+          <Route path="/chat" element={<Chat />} />
+        </Routes>
+      </BrowserRouter>
+    </ThemeProvider>
   );
 };
 
