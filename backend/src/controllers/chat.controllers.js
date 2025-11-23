@@ -4,7 +4,6 @@ import { ApiError } from "../utils/ApiError.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
-// Get chat history with pagination
 const getChatHistory = asyncHandler(async (req, res) => {
   const { page = 1, limit = 50 } = req.query;
 
@@ -33,59 +32,123 @@ const getChatHistory = asyncHandler(async (req, res) => {
   );
 });
 
-// Upload image for chat
-const uploadChatImage = asyncHandler(async (req, res) => {
+const sendTextMessage = asyncHandler(async (req, res) => {
+  const { content } = req.body;
+  const userId = req.user._id;
+
+  if (!content || content.trim() === "") {
+    throw new ApiError(400, "Message content is required");
+  }
+
+  const message = await Message.create({
+    sender: userId,
+    messageType: "text",
+    content: content.trim(),
+  });
+
+  await message.populate("sender", "username email");
+
+  const io = req.app.get("io");
+  io.to("community-chat").emit("message:new", {
+    _id: message._id,
+    sender: {
+      _id: message.sender._id,
+      username: message.sender.username,
+      email: message.sender.email,
+    },
+    messageType: message.messageType,
+    content: message.content,
+    createdAt: message.createdAt,
+    updatedAt: message.updatedAt,
+  });
+
+  res.status(201).json(
+    new ApiResponse(201, message, "Text message sent successfully")
+  );
+});
+
+const sendImageMessage = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
   if (!req.file) {
     throw new ApiError(400, "Image file is required");
   }
 
-  // Upload to cloudinary
   const uploadedFile = await uploadOnCloudinary(req.file.path);
 
   if (!uploadedFile) {
     throw new ApiError(500, "Failed to upload image");
   }
 
-  res.status(200).json(
-    new ApiResponse(
-      200,
-      {
-        mediaUrl: uploadedFile.url,
-        mediaPublicId: uploadedFile.public_id,
-        messageType: "image",
-      },
-      "Image uploaded successfully"
-    )
+  const message = await Message.create({
+    sender: userId,
+    messageType: "image",
+    mediaUrl: uploadedFile.url,
+    mediaPublicId: uploadedFile.public_id,
+  });
+
+  await message.populate("sender", "username email");
+
+  const io = req.app.get("io");
+  io.to("community-chat").emit("message:new", {
+    _id: message._id,
+    sender: {
+      _id: message.sender._id,
+      username: message.sender.username,
+      email: message.sender.email,
+    },
+    messageType: message.messageType,
+    mediaUrl: message.mediaUrl,
+    createdAt: message.createdAt,
+    updatedAt: message.updatedAt,
+  });
+
+  res.status(201).json(
+    new ApiResponse(201, message, "Image message sent successfully")
   );
 });
 
-// Upload video for chat
-const uploadChatVideo = asyncHandler(async (req, res) => {
+const sendVideoMessage = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
   if (!req.file) {
     throw new ApiError(400, "Video file is required");
   }
 
-  // Upload to cloudinary
   const uploadedFile = await uploadOnCloudinary(req.file.path);
 
   if (!uploadedFile) {
     throw new ApiError(500, "Failed to upload video");
   }
 
-  res.status(200).json(
-    new ApiResponse(
-      200,
-      {
-        mediaUrl: uploadedFile.url,
-        mediaPublicId: uploadedFile.public_id,
-        messageType: "video",
-      },
-      "Video uploaded successfully"
-    )
+  const message = await Message.create({
+    sender: userId,
+    messageType: "video",
+    mediaUrl: uploadedFile.url,
+    mediaPublicId: uploadedFile.public_id,
+  });
+
+  await message.populate("sender", "username email");
+
+  const io = req.app.get("io");
+  io.to("community-chat").emit("message:new", {
+    _id: message._id,
+    sender: {
+      _id: message.sender._id,
+      username: message.sender.username,
+      email: message.sender.email,
+    },
+    messageType: message.messageType,
+    mediaUrl: message.mediaUrl,
+    createdAt: message.createdAt,
+    updatedAt: message.updatedAt,
+  });
+
+  res.status(201).json(
+    new ApiResponse(201, message, "Video message sent successfully")
   );
 });
 
-// Delete a message (soft delete)
 const deleteMessage = asyncHandler(async (req, res) => {
   const { messageId } = req.params;
   const userId = req.user._id;
@@ -96,7 +159,6 @@ const deleteMessage = asyncHandler(async (req, res) => {
     throw new ApiError(404, "Message not found");
   }
 
-  // Only sender can delete their message
   if (message.sender.toString() !== userId.toString()) {
     throw new ApiError(403, "You can only delete your own messages");
   }
@@ -104,7 +166,6 @@ const deleteMessage = asyncHandler(async (req, res) => {
   message.isDeleted = true;
   await message.save();
 
-  // Emit socket event to notify all users
   const io = req.app.get("io");
   io.emit("message:deleted", { messageId });
 
@@ -113,10 +174,9 @@ const deleteMessage = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, {}, "Message deleted successfully"));
 });
 
-// Mark messages as read
 const markAsRead = asyncHandler(async (req, res) => {
   const userId = req.user._id;
-  const { messageIds } = req.body; // Array of message IDs
+  const { messageIds } = req.body;
 
   if (!Array.isArray(messageIds) || messageIds.length === 0) {
     throw new ApiError(400, "Message IDs array is required");
@@ -140,12 +200,10 @@ const markAsRead = asyncHandler(async (req, res) => {
   res.status(200).json(new ApiResponse(200, {}, "Messages marked as read"));
 });
 
-// Get online users count
 const getOnlineUsers = asyncHandler(async (req, res) => {
   const io = req.app.get("io");
   const onlineUsers = [];
 
-  // Get all connected sockets
   const sockets = await io.fetchSockets();
 
   sockets.forEach((socket) => {
@@ -166,8 +224,9 @@ const getOnlineUsers = asyncHandler(async (req, res) => {
 
 export {
   getChatHistory,
-  uploadChatImage,
-  uploadChatVideo,
+  sendTextMessage,
+  sendImageMessage,
+  sendVideoMessage,
   deleteMessage,
   markAsRead,
   getOnlineUsers,

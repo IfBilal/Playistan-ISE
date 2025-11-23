@@ -1,8 +1,9 @@
 import { Router } from "express";
 import {
   getChatHistory,
-  uploadChatImage,
-  uploadChatVideo,
+  sendTextMessage,
+  sendImageMessage,
+  sendVideoMessage,
   deleteMessage,
   markAsRead,
   getOnlineUsers,
@@ -16,9 +17,11 @@ router.use(verifyJWT);
 
 router.route("/history").get(getChatHistory);
 
-router.route("/upload-image").post(uploadImages.single("image"), uploadChatImage);
+router.route("/send-text").post(sendTextMessage);
 
-router.route("/upload-video").post(uploadVideos.single("video"), uploadChatVideo);
+router.route("/send-image").post(uploadImages.single("image"), sendImageMessage);
+
+router.route("/send-video").post(uploadVideos.single("video"), sendVideoMessage);
 
 router.route("/message/:messageId").delete(deleteMessage);
 
