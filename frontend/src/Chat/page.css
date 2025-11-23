@@ -430,6 +430,7 @@
 }
 
 .attach-btn,
+.video-btn,
 .send-btn {
   width: 48px;
   height: 48px;
@@ -446,6 +447,7 @@
 }
 
 .attach-btn:hover,
+.video-btn:hover,
 .send-btn:hover {
   background: rgba(74, 222, 128, 0.2);
   border-color: #4ADE80;
@@ -454,6 +456,7 @@
 }
 
 .attach-btn:disabled,
+.video-btn:disabled,
 .send-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;

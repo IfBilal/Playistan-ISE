@@ -42,6 +42,9 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
+        // SAVE USER TO LOCALSTORAGE - THIS WAS MISSING!
+        localStorage.setItem("user", JSON.stringify(data.data.user));
+        
         navigate("/homepage");
       } else {
         setError(data.message || "Login failed");

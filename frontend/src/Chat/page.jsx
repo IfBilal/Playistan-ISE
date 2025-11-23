@@ -15,10 +15,10 @@ const Chat = () => {
   const [mediaPreview, setMediaPreview] = useState(null);
   const [uploadingMedia, setUploadingMedia] = useState(false);
   const [messageType, setMessageType] = useState('text');
-  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   
   const messagesEndRef = useRef(null);
-  const fileInputRef = useRef(null);
+  const imageInputRef = useRef(null);
+  const videoInputRef = useRef(null);
   const typingTimeoutRef = useRef(null);
 
   // Get access token from cookies
@@ -32,19 +32,31 @@ const Chat = () => {
   useEffect(() => {
     const token = getAccessToken();
     
-    if (!token) {
+    // Get current user from localStorage
+    const userStr = localStorage.getItem('user');
+    
+    if (!userStr) {
+      console.log('No user in localStorage');
+      // User not logged in, go back
+      navigate('/');
+      return;
+    }
+    
+    let user;
+    try {
+      user = JSON.parse(userStr);
+      setCurrentUser(user);
+    } catch (err) {
+      console.error('Failed to parse user:', err);
       navigate('/');
       return;
     }
 
-    // Get current user from localStorage
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    setCurrentUser(user);
-
-    // Connect to socket
+    // Connect to socket (token from cookie will be sent automatically)
     const newSocket = io(import.meta.env.VITE_BACKEND_URL, {
-      auth: { token },
+      auth: { token: token || '' },
       transports: ['websocket'],
+      withCredentials: true,
     });
 
     newSocket.on('connect', () => {
@@ -54,8 +66,8 @@ const Chat = () => {
 
     newSocket.on('connect_error', (error) => {
       console.error('Connection error:', error);
-      alert('Failed to connect to chat. Please login again.');
-      navigate('/');
+      // Don't alert or redirect, just log
+      console.log('Socket connection failed. Token might be invalid.');
     });
 
     setSocket(newSocket);
@@ -193,28 +205,18 @@ const Chat = () => {
     }, 2000);
   };
 
-  const handleFileSelect = async (e) => {
+  const handleImageSelect = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
-    // Determine message type
-    const isImage = file.type.startsWith('image/');
-    const isVideo = file.type.startsWith('video/');
-
-    if (!isImage && !isVideo) {
-      alert('Please select an image or video file');
-      return;
-    }
 
     setUploadingMedia(true);
 
     try {
       const formData = new FormData();
-      formData.append('media', file);
-      formData.append('messageType', isImage ? 'image' : 'video');
+      formData.append('image', file);
 
       const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/chat/upload-media`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/chat/upload-image`,
         {
           method: 'POST',
           credentials: 'include',
@@ -222,7 +224,7 @@ const Chat = () => {
         }
       );
 
-      if (!response.ok) throw new Error('Upload failed');
+      if (!response.ok) throw new Error('Image upload failed');
 
       const data = await response.json();
       
@@ -234,8 +236,46 @@ const Chat = () => {
       
       setMessageType(data.data.messageType);
     } catch (error) {
-      console.error('Error uploading media:', error);
-      alert('Failed to upload media. Please try again.');
+      console.error('Error uploading image:', error);
+      alert('Failed to upload image. Please try again.');
+    } finally {
+      setUploadingMedia(false);
+    }
+  };
+
+  const handleVideoSelect = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingMedia(true);
+
+    try {
+      const formData = new FormData();
+      formData.append('video', file);
+
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/chat/upload-video`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          body: formData,
+        }
+      );
+
+      if (!response.ok) throw new Error('Video upload failed');
+
+      const data = await response.json();
+      
+      setMediaPreview({
+        mediaUrl: data.data.mediaUrl,
+        mediaPublicId: data.data.mediaPublicId,
+        type: data.data.messageType,
+      });
+      
+      setMessageType(data.data.messageType);
+    } catch (error) {
+      console.error('Error uploading video:', error);
+      alert('Failed to upload video. Please try again.');
     } finally {
       setUploadingMedia(false);
     }
@@ -387,23 +427,51 @@ const Chat = () => {
       <form className="input-area" onSubmit={handleSendMessage}>
         <input
           type="file"
-          ref={fileInputRef}
-          onChange={handleFileSelect}
-          accept="image/*,video/*"
+          ref={imageInputRef}
+          onChange={handleImageSelect}
+          accept="image/*"
+          style={{ display: 'none' }}
+        />
+
+        <input
+          type="file"
+          ref={videoInputRef}
+          onChange={handleVideoSelect}
+          accept="video/*"
           style={{ display: 'none' }}
         />
 
         <button
           type="button"
           className="attach-btn"
-          onClick={() => fileInputRef.current?.click()}
+          onClick={() => imageInputRef.current?.click()}
           disabled={uploadingMedia}
+          title="Upload Image"
         >
           {uploadingMedia ? (
             <div className="mini-spinner"></div>
           ) : (
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" strokeWidth={2}/>
+              <circle cx="8.5" cy="8.5" r="1.5" strokeWidth={2}/>
+              <path d="M21 15l-5-5L5 21" strokeWidth={2}/>
+            </svg>
+          )}
+        </button>
+
+        <button
+          type="button"
+          className="video-btn"
+          onClick={() => videoInputRef.current?.click()}
+          disabled={uploadingMedia}
+          title="Upload Video"
+        >
+          {uploadingMedia ? (
+            <div className="mini-spinner"></div>
+          ) : (
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+              <path d="M23 7l-7 5 7 5V7z" strokeWidth={2}/>
+              <rect x="1" y="5" width="15" height="14" rx="2" ry="2" strokeWidth={2}/>
             </svg>
           )}
         </button>

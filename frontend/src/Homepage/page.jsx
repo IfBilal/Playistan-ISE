@@ -36,9 +36,18 @@ const Homepage = () => {
         `${import.meta.env.VITE_BACKEND_URL}/api/v1/users/logout`,
         { method: "POST", credentials: "include" }
       );
-      if (response.ok || response.status === 498) navigate('/');
+      
+      // Clear localStorage regardless of response
+      localStorage.removeItem('user');
+      
+      if (response.ok || response.status === 498) {
+        navigate('/');
+      }
     } catch (err) {
       console.error("Logout error:", err);
+      // Still clear localStorage and redirect
+      localStorage.removeItem('user');
+      navigate('/');
     }
   };
 
