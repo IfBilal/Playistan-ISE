@@ -20,11 +20,13 @@ import userRouter from "./routes/user.router.js";
 import adminRouter from "./routes/admin.router.js";
 import bookingRouter from "./routes/booking.router.js";
 import groundRouter from "./routes/ground.router.js";
+import chatRouter from "./routes/chat.router.js";
 
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/bookings", bookingRouter);
 app.use("/api/v1/grounds", groundRouter);
 app.use("/api/v1/users", userRouter);
+app.use("/api/v1/chat", chatRouter);
 
 app.use(errorHandler);
 export default app;
