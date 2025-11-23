@@ -4,8 +4,21 @@ import connectDB from "./db/index.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import { initializeChatSocket } from "./sockets/chat.socket.js";
+import fs from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 
 dotenv.config();
+
+// Ensure temp directory exists for file uploads
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const tempDir = path.join(__dirname, "../public/temp");
+
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true });
+  console.log("✅ Created temp directory for uploads");
+}
 
 let port = process.env.PORT || 8001;
 console.log(process.env.CORS_ORIGIN);

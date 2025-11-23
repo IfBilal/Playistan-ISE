@@ -145,34 +145,57 @@ const Chat = () => {
   };
 
   const handleSendMessage = async (e) => {
-    e.preventDefault();
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     
     if (!socket) return;
 
-    if (messageType === 'text' && !inputMessage.trim()) return;
-    
-    if ((messageType === 'image' || messageType === 'video') && !mediaPreview) return;
+    // Validate - only text messages are sent via this function
+    if (!inputMessage.trim()) return;
 
-    let messageData = {
-      messageType,
-      content: inputMessage.trim(),
-    };
+    // Store the input element before clearing
+    const inputElement = e?.target?.querySelector('.message-input');
 
-    // If media, include the URLs
-    if (mediaPreview) {
-      messageData.mediaUrl = mediaPreview.mediaUrl;
-      messageData.mediaPublicId = mediaPreview.mediaPublicId;
+    try {
+      // Stop typing indicator
+      socket.emit('typing:stop');
+      setIsTyping(false);
+
+      // Send text message via REST API
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/chat/send-text`,
+        {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ content: inputMessage.trim() }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to send message');
+      }
+
+      // Reset input and keep focus
+      setInputMessage('');
+      
+      // Keep focus on input to prevent scroll
+      if (inputElement) {
+        setTimeout(() => {
+          inputElement.focus();
+          inputElement.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+        }, 0);
+      }
+      
+    } catch (error) {
+      console.error('Error sending message:', error);
+      alert('Failed to send message: ' + error.message);
     }
-
-    socket.emit('message:send', messageData);
-
-    // Reset input
-    setInputMessage('');
-    setMediaPreview(null);
-    setMessageType('text');
-    
-    // Stop typing indicator
-    socket.emit('typing:stop');
   };
 
   const handleTyping = (e) => {
@@ -202,14 +225,26 @@ const Chat = () => {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Validate file size (e.g., max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('Image size must be less than 10MB');
+      return;
+    }
+
+    // Get the message input to maintain focus
+    const messageInput = document.querySelector('.message-input');
+    
     setUploadingMedia(true);
 
     try {
       const formData = new FormData();
       formData.append('image', file);
 
+      console.log('Uploading image:', file.name, file.size, 'bytes');
+
+      // Send image directly - this uploads AND creates the message
       const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/chat/upload-image`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/chat/send-image`,
         {
           method: 'POST',
           credentials: 'include',
@@ -217,20 +252,32 @@ const Chat = () => {
         }
       );
 
-      if (!response.ok) throw new Error('Image upload failed');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Image upload failed');
+      }
 
       const data = await response.json();
       
-      setMediaPreview({
-        mediaUrl: data.data.mediaUrl,
-        mediaPublicId: data.data.mediaPublicId,
-        type: data.data.messageType,
-      });
+      // Image sent successfully - message will appear via socket.on('message:new')
+      console.log('Image message sent successfully:', data);
       
-      setMessageType(data.data.messageType);
+      // Reset the file input and restore focus
+      if (imageInputRef.current) {
+        imageInputRef.current.value = '';
+      }
+      
+      // Keep focus on message input to prevent scroll
+      if (messageInput) {
+        setTimeout(() => {
+          messageInput.focus();
+          messageInput.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+        }, 0);
+      }
+      
     } catch (error) {
       console.error('Error uploading image:', error);
-      alert('Failed to upload image. Please try again.');
+      alert('Failed to upload image: ' + error.message);
     } finally {
       setUploadingMedia(false);
     }
@@ -240,14 +287,26 @@ const Chat = () => {
     const file = e.target.files[0];
     if (!file) return;
 
+    // Validate file size (e.g., max 50MB for videos)
+    if (file.size > 50 * 1024 * 1024) {
+      alert('Video size must be less than 50MB');
+      return;
+    }
+
+    // Get the message input to maintain focus
+    const messageInput = document.querySelector('.message-input');
+    
     setUploadingMedia(true);
 
     try {
       const formData = new FormData();
       formData.append('video', file);
 
+      console.log('Uploading video:', file.name, file.size, 'bytes');
+
+      // Send video directly - this uploads AND creates the message
       const response = await fetch(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/chat/upload-video`,
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/chat/send-video`,
         {
           method: 'POST',
           credentials: 'include',
@@ -255,20 +314,32 @@ const Chat = () => {
         }
       );
 
-      if (!response.ok) throw new Error('Video upload failed');
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Video upload failed');
+      }
 
       const data = await response.json();
       
-      setMediaPreview({
-        mediaUrl: data.data.mediaUrl,
-        mediaPublicId: data.data.mediaPublicId,
-        type: data.data.messageType,
-      });
+      // Video sent successfully - message will appear via socket.on('message:new')
+      console.log('Video message sent successfully:', data);
       
-      setMessageType(data.data.messageType);
+      // Reset the file input and restore focus
+      if (videoInputRef.current) {
+        videoInputRef.current.value = '';
+      }
+      
+      // Keep focus on message input to prevent scroll
+      if (messageInput) {
+        setTimeout(() => {
+          messageInput.focus();
+          messageInput.scrollIntoView({ behavior: 'instant', block: 'nearest' });
+        }, 0);
+      }
+      
     } catch (error) {
       console.error('Error uploading video:', error);
-      alert('Failed to upload video. Please try again.');
+      alert('Failed to upload video: ' + error.message);
     } finally {
       setUploadingMedia(false);
     }
