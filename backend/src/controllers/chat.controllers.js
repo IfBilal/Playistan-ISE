@@ -33,23 +33,17 @@ const getChatHistory = asyncHandler(async (req, res) => {
   );
 });
 
-// Upload media for chat (images/videos)
-const uploadChatMedia = asyncHandler(async (req, res) => {
-  const { messageType } = req.body; // 'image' or 'video'
-
+// Upload image for chat
+const uploadChatImage = asyncHandler(async (req, res) => {
   if (!req.file) {
-    throw new ApiError(400, "Media file is required");
-  }
-
-  if (!["image", "video"].includes(messageType)) {
-    throw new ApiError(400, "Invalid message type");
+    throw new ApiError(400, "Image file is required");
   }
 
   // Upload to cloudinary
   const uploadedFile = await uploadOnCloudinary(req.file.path);
 
   if (!uploadedFile) {
-    throw new ApiError(500, "Failed to upload media");
+    throw new ApiError(500, "Failed to upload image");
   }
 
   res.status(200).json(
@@ -58,9 +52,35 @@ const uploadChatMedia = asyncHandler(async (req, res) => {
       {
         mediaUrl: uploadedFile.url,
         mediaPublicId: uploadedFile.public_id,
-        messageType,
+        messageType: "image",
       },
-      "Media uploaded successfully"
+      "Image uploaded successfully"
+    )
+  );
+});
+
+// Upload video for chat
+const uploadChatVideo = asyncHandler(async (req, res) => {
+  if (!req.file) {
+    throw new ApiError(400, "Video file is required");
+  }
+
+  // Upload to cloudinary
+  const uploadedFile = await uploadOnCloudinary(req.file.path);
+
+  if (!uploadedFile) {
+    throw new ApiError(500, "Failed to upload video");
+  }
+
+  res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        mediaUrl: uploadedFile.url,
+        mediaPublicId: uploadedFile.public_id,
+        messageType: "video",
+      },
+      "Video uploaded successfully"
     )
   );
 });
@@ -146,7 +166,8 @@ const getOnlineUsers = asyncHandler(async (req, res) => {
 
 export {
   getChatHistory,
-  uploadChatMedia,
+  uploadChatImage,
+  uploadChatVideo,
   deleteMessage,
   markAsRead,
   getOnlineUsers,
