@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
+import { useLanguage } from '../contexts/LanguageContext';
 import './page.css';
 
 const BookingPage = () => {
   const location = useLocation();
   const { groundId } = useParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   const [ground, setGround] = useState(location.state || null);
   const [loading, setLoading] = useState(!location.state);
@@ -15,6 +17,16 @@ const BookingPage = () => {
   const [bookingLoading, setBookingLoading] = useState(false);
   const [bookingMessage, setBookingMessage] = useState(null);
   const [bookedSlots, setBookedSlots] = useState([]); // State to store booked times
+
+  // Review states
+  const [reviews, setReviews] = useState([]);
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalReviews, setTotalReviews] = useState(0);
+  const [userReviewCount, setUserReviewCount] = useState(0);
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewLoading, setReviewLoading] = useState(false);
 
   // Generate dates dynamically: today + next 7 days
   const generateDates = (numDays = 7) => {
@@ -37,7 +49,7 @@ const BookingPage = () => {
     if (!date || !groundId) return;
 
     try {
-      // Calls your backend route to get confirmed bookings for this ground/date
+      // Calls your backend route to get pending AND confirmed bookings for this ground/date
       const url = `${import.meta.env.VITE_BACKEND_URL}/api/v1/bookings/${groundId}/${date}`;
       const response = await fetch(url, { credentials: 'include' });
       
@@ -47,8 +59,9 @@ const BookingPage = () => {
 
       const data = await response.json();
       
-      if (data.data) {
+      if (data.data && data.data.length > 0) {
         // Map the bookings to just the time slot string (e.g., "10:00 - 11:00")
+        // This now includes both pending and confirmed bookings
         const slots = data.data.map(b => `${b.startTime} - ${b.endTime}`);
         setBookedSlots(slots);
       } else {
@@ -56,6 +69,7 @@ const BookingPage = () => {
       }
     } catch (err) {
       console.error('Error fetching booked slots:', err);
+      setBookedSlots([]);
     }
   };
 
@@ -72,6 +86,10 @@ const BookingPage = () => {
   // --- GROUND DATA FETCH ---
   useEffect(() => {
     if (!ground && groundId) fetchGround();
+    if (groundId) {
+      fetchReviews();
+      fetchUserReviewCount();
+    }
   }, [groundId, ground]);
 
   const fetchGround = async () => {
@@ -85,6 +103,101 @@ const BookingPage = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Fetch user's review count from backend
+  const fetchUserReviewCount = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/reviews/user-count/${groundId}`, {
+        credentials: 'include'
+      });
+      const data = await res.json();
+      if (res.ok && data.data) {
+        console.log('User review count from backend:', data.data.count);
+        setUserReviewCount(data.data.count);
+      }
+    } catch (err) {
+      console.error('Failed to fetch user review count:', err);
+      setUserReviewCount(0);
+    }
+  };
+
+  // Fetch reviews for the ground
+  const fetchReviews = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/reviews/${groundId}`);
+      const data = await res.json();
+      if (res.ok && data.data) {
+        setReviews(data.data.reviews || []);
+        setAverageRating(data.data.averageRating || 0);
+        setTotalReviews(data.data.totalReviews || 0);
+      }
+    } catch (err) {
+      console.error('Failed to fetch reviews:', err);
+    }
+  };
+
+  // Submit a review
+  const handleSubmitReview = async (e) => {
+    e.preventDefault();
+    
+    if (!reviewRating || !reviewComment.trim()) {
+      alert('Please provide both rating and comment');
+      return;
+    }
+
+    try {
+      setReviewLoading(true);
+      const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/v1/reviews/add`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          groundId,
+          rating: reviewRating,
+          comment: reviewComment,
+        }),
+      });
+
+      const data = await res.json();
+      
+      if (res.ok) {
+        alert('Review submitted successfully!');
+        setReviewRating(0);
+        setReviewComment('');
+        setShowReviewForm(false);
+        await fetchReviews(); // Refresh reviews
+        await fetchUserReviewCount(); // Update user's review count
+      } else {
+        // If backend says limit reached, update the count and close form
+        if (data.message && data.message.includes('2 reviews')) {
+          await fetchUserReviewCount(); // Update count from backend
+          setShowReviewForm(false);
+        }
+        alert(data.message || 'Failed to submit review');
+      }
+    } catch (err) {
+      console.error('Error submitting review:', err);
+      alert('Error submitting review. Please try again.');
+    } finally {
+      setReviewLoading(false);
+    }
+  };
+
+  const renderStars = (rating, interactive = false, onRate = null) => {
+    return (
+      <div className="star-rating">
+        {[1, 2, 3, 4, 5].map((star) => (
+          <span
+            key={star}
+            className={`star ${star <= rating ? 'filled' : ''} ${interactive ? 'interactive' : ''}`}
+            onClick={() => interactive && onRate && onRate(star)}
+          >
+            ★
+          </span>
+        ))}
+      </div>
+    );
   };
 
   if (loading) return <div className="booking-container">Loading ground details...</div>;
@@ -176,8 +289,8 @@ const BookingPage = () => {
             <p className="venue-description">{ground.description || 'No description provided.'}</p>
             <div className="venue-meta">
               <div className="meta-item">City: {ground.city}</div>
-              <div className="meta-item">Owner: {ground.owner?.name || 'Unknown'}</div>
-              <div className="meta-item">Email: {ground.owner?.email || 'N/A'}</div>
+              <div className="meta-item">Owner: {ground.owner?.username || 'Unknown'}</div>
+              <div className="meta-item">Contact: {ground.owner?.phoneNumber || 'N/A'}</div>
               <div className="meta-item">Location: {ground.location}</div>
               <div className="meta-item">Price: Rs. {ground.basePrice}</div>
             </div>
@@ -205,7 +318,7 @@ const BookingPage = () => {
 
         {/* Date Selection */}
         <div className="date-section">
-          <h3 className="section-title">Select Date</h3>
+          <h3 className="section-title">{t('selectDate')}</h3>
           <div className="date-grid">
             {availableDates.map((d, idx) => (
               <div
@@ -237,8 +350,7 @@ const BookingPage = () => {
                   className={`slot-card ${selectedSlot === slot ? 'selected' : ''} ${booked ? 'booked' : ''}`}
                   onClick={() => !booked && setSelectedSlot(slot)} // Prevent clicking if booked
                 >
-                  {slot}
-                  {booked && <span className="booked-text">BOOKED</span>}
+                  {booked ? <span className="booked-text">BOOKED</span> : slot}
                 </div>
               );
             })}
@@ -283,8 +395,103 @@ const BookingPage = () => {
             // Disable if loading, no date/slot selected, or no screenshot uploaded
             disabled={bookingLoading || !selectedSlot || !selectedDate || !paymentScreenshot}
           >
-            {bookingLoading ? 'Processing Request...' : 'Book Now'}
+            {bookingLoading ? 'Processing Request...' : t('bookNow')}
           </button>
+        </div>
+
+        {/* Reviews Section */}
+        <div className="reviews-section">
+          <div className="reviews-header">
+            <h3 className="section-title">{t('reviews')} ({totalReviews})</h3>
+            {averageRating > 0 && (
+              <div className="average-rating">
+                {renderStars(Math.round(averageRating))}
+                <span className="rating-text">{averageRating} {t('stars')}</span>
+              </div>
+            )}
+          </div>
+
+          <button 
+            className="add-review-btn"
+            onClick={() => {
+              console.log('Button clicked. User review count:', userReviewCount);
+              console.log('Can add review?', userReviewCount < 2);
+              if (userReviewCount < 2) {
+                setShowReviewForm(!showReviewForm);
+              } else {
+                alert(`You have already submitted ${userReviewCount} reviews. Maximum is 2.`);
+              }
+            }}
+            disabled={userReviewCount >= 2}
+          >
+            {userReviewCount >= 2 
+              ? `${t('reviewLimit')} (${userReviewCount}/2)` 
+              : (showReviewForm ? t('cancel') : t('addReview'))
+            }
+          </button>
+
+          {console.log('Rendering: showReviewForm=', showReviewForm, 'userReviewCount=', userReviewCount, 'Should show form?', showReviewForm && userReviewCount < 2)}
+          {showReviewForm && userReviewCount < 2 && (
+            <form className="review-form" onSubmit={handleSubmitReview}>
+              <div className="form-group">
+                <label>{t('rating')}:</label>
+                {renderStars(reviewRating, true, setReviewRating)}
+              </div>
+              <div className="form-group">
+                <label>{t('yourReview')}:</label>
+                <textarea
+                  value={reviewComment}
+                  onChange={(e) => setReviewComment(e.target.value)}
+                  placeholder={t('writeReview')}
+                  rows="4"
+                  maxLength="500"
+                  required
+                />
+                <small>{reviewComment.length}/500</small>
+              </div>
+              <button 
+                type="submit" 
+                className="submit-review-btn"
+                disabled={reviewLoading || !reviewRating || !reviewComment.trim()}
+              >
+                {reviewLoading ? t('loading') : t('submitReview')}
+              </button>
+              <p className="review-limit-text">{t('reviewLimit')}</p>
+            </form>
+          )}
+
+          <div className="reviews-list">
+            {reviews.length === 0 ? (
+              <div className="no-reviews">
+                <p>{t('noReviews')}</p>
+                <p className="text-muted">{t('beFirstToReview')}</p>
+              </div>
+            ) : (
+              reviews.map((review) => (
+                <div key={review._id} className="review-card">
+                  <div className="review-header">
+                    <div className="reviewer-info">
+                      <div className="reviewer-avatar">
+                        {review.userId?.username?.charAt(0).toUpperCase() || 'U'}
+                      </div>
+                      <div>
+                        <div className="reviewer-name">{review.userId?.username || 'Anonymous'}</div>
+                        <div className="review-date">
+                          {new Date(review.createdAt).toLocaleDateString('en-GB', {
+                            day: '2-digit',
+                            month: 'short',
+                            year: 'numeric'
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                    {renderStars(review.rating)}
+                  </div>
+                  <p className="review-comment">{review.comment}</p>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>

@@ -246,6 +246,28 @@
   cursor: not-allowed;
 }
 
+.btn-cancel {
+  background: rgba(220, 53, 69, 0.15);
+  border: 1px solid rgba(220, 53, 69, 0.5);
+  color: #ff6780;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-cancel:hover {
+  background: rgba(220, 53, 69, 0.3);
+  box-shadow: 0 0 15px rgba(220, 53, 69, 0.5);
+  transform: scale(1.1);
+}
+
 .no-bookings, .loading-spinner {
   text-align: center;
   padding: 2rem;

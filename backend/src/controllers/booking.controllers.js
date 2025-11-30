@@ -22,10 +22,11 @@ const BookGround = asyncHandler(async (req, res) => {
     date: date,
     startTime,
     endTime,
+    status: { $in: ["pending", "confirmed"] }
   });
 
   if (existingBooking) {
-    throw new ApiError(400, "Time slot already booked");
+    throw new ApiError(400, "Time slot already booked or pending confirmation");
   }
 
   if (!req.file) {
@@ -52,28 +53,21 @@ const BookGround = asyncHandler(async (req, res) => {
 });
 
 const bookedGrounds = asyncHandler(async (req, res) => {
-  const { groundId, date } = req.query;
+  const { groundId, date } = req.params;
 
   if (!groundId || !date) {
     throw new ApiError(400, "Ground ID and date are required");
   }
 
-  const bookings = await Booking.find({ groundId, date });
+  const bookings = await Booking.find({ 
+    groundId, 
+    date, 
+    status: { $in: ["pending", "confirmed"] }
+  });
+  
   res
     .status(200)
     .json(new ApiResponse(200, bookings, "Bookings retrieved successfully"));
 });
 
-const confirmedBookings = asyncHandler(async (req, res) => {
-  const { groundId } = req.query;
-
-  if (!groundId) {
-    throw new ApiError(400, "Ground ID is required");
-  }
-
-  const bookings = await Booking.find({ groundId, status: "confirmed" });
-  res
-    .status(200)
-    .json(new ApiResponse(200, bookings, "Bookings retrieved successfully"));
-});
-export { BookGround, bookedGrounds, confirmedBookings };
+export { BookGround, bookedGrounds };

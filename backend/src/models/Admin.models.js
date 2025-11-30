@@ -11,6 +11,11 @@ const adminSchema = new Schema(
       trim: true,
       index: true,
     },
+    phoneNumber: {
+      type: String,
+      required: true,
+      trim: true,
+    },
     ground:{
       type: Schema.Types.ObjectId,
       ref: "Ground",

@@ -1,15 +1,19 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../contexts/LanguageContext.jsx";
+import { useTheme } from "../contexts/ThemeContext.jsx";
 import "./page.css";
 
 export default function AdminPage() {
+  const { t } = useLanguage();
+  const { theme } = useTheme();
+  const navigate = useNavigate();
   const [pendingBookings, setPendingBookings] = useState([]);
   const [confirmedBookings, setConfirmedBookings] = useState([]);
   const [groundName, setGroundName] = useState("Your Venue");
-  const [groundId, setGroundId] = useState(null); // Store ground ID
+  const [groundId, setGroundId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [screenshotModal, setScreenshotModal] = useState(null);
-  const navigate = useNavigate();
 
   useEffect(() => {
     document.body.style.background = "radial-gradient(circle at top left, #001a0f 0%, #000a05 50%, #001505 100%)";
@@ -47,11 +51,21 @@ export default function AdminPage() {
       }
 
       const pendingData = await pendingResponse.json();
-      const pending = pendingData.data || [];
       
-      // Extract ground ID from first booking
+      // New response structure includes ground info
+      const pending = pendingData.data?.bookings || pendingData.data || [];
+      const groundInfo = pendingData.data?.ground;
+      
+      setPendingBookings(pending);
+      
+      // Extract ground ID from response ground info or first booking
       let currentGroundId = groundId;
-      if (pending.length > 0 && pending[0].groundId) {
+      
+      if (groundInfo) {
+        currentGroundId = groundInfo._id;
+        setGroundId(currentGroundId);
+        setGroundName(groundInfo.name || "Your Venue");
+      } else if (pending.length > 0 && pending[0].groundId) {
         currentGroundId = pending[0].groundId._id || pending[0].groundId;
         setGroundId(currentGroundId);
         if (pending[0].groundId?.name) {
@@ -59,34 +73,44 @@ export default function AdminPage() {
         }
       }
 
-      setPendingBookings(pending);
+      console.log("Ground ID:", currentGroundId);
 
-      // Fetch confirmed bookings if we have a ground ID
+      // Fetch confirmed bookings using admin endpoint
       if (currentGroundId) {
         try {
           const confirmedResponse = await fetch(
-            `${import.meta.env.VITE_BACKEND_URL}/api/v1/bookings/confirm-bookings/${currentGroundId}`,
+            `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/confirmed-bookings`,
             {
               method: "GET",
               credentials: "include",
             }
           );
 
+          console.log("Confirmed bookings response status:", confirmedResponse.status);
+
           if (confirmedResponse.ok) {
             const confirmedData = await confirmedResponse.json();
+            console.log("Confirmed bookings data:", confirmedData);
             const confirmed = confirmedData.data || [];
             setConfirmedBookings(confirmed);
             
             // Update ground name if we didn't get it from pending bookings
-            if (!groundName && confirmed.length > 0 && confirmed[0].groundId?.name) {
+            if ((!groundName || groundName === "Your Venue") && confirmed.length > 0 && confirmed[0].groundId?.name) {
               setGroundName(confirmed[0].groundId.name);
             }
+          } else {
+            const errorData = await confirmedResponse.json();
+            console.error("Failed to fetch confirmed bookings:", errorData);
           }
         } catch (error) {
           console.error("Error fetching confirmed bookings:", error);
           // Don't fail the whole page if confirmed bookings fail
           setConfirmedBookings([]);
         }
+      } else {
+        // If no pending bookings, try to fetch confirmed to get ground ID
+        console.warn("No ground ID available to fetch confirmed bookings");
+        setConfirmedBookings([]);
       }
 
     } catch (error) {
@@ -120,9 +144,8 @@ export default function AdminPage() {
 
       const data = await response.json();
       
-      // Move from pending to confirmed in the UI state
-      setPendingBookings(prev => prev.filter(b => b._id !== bookingId));
-      setConfirmedBookings(prev => [...prev, data.data]);
+      // Refetch all bookings to get the updated state from backend
+      await fetchBookings();
       
       alert("Booking confirmed successfully!");
 
@@ -155,12 +178,44 @@ export default function AdminPage() {
         throw new Error("Failed to reject booking");
       }
       
-      // Remove from pending list
-      setPendingBookings(prev => prev.filter(b => b._id !== bookingId));
+      // Refetch all bookings to get the updated state
+      await fetchBookings();
       alert("Booking rejected successfully!");
     } catch (error) {
       console.error("Error rejecting booking:", error);
       alert("Failed to reject booking. Please try again.");
+    }
+  };
+
+  const handleCancel = async (bookingId, userName) => {
+    if (!confirm(`Are you sure you want to cancel ${userName}'s confirmed booking?`)) {
+      return;
+    }
+
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_BACKEND_URL}/api/v1/admin/cancel-booking`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ bookingId }),
+        }
+      );
+
+      if (!response.ok) {
+        navigate("/adminlogin");
+        throw new Error("Failed to cancel booking");
+      }
+      
+      // Refetch all bookings to get the updated state
+      await fetchBookings();
+      alert("Booking cancelled successfully!");
+    } catch (error) {
+      console.error("Error cancelling booking:", error);
+      alert("Failed to cancel booking. Please try again.");
     }
   };
 
@@ -198,7 +253,7 @@ export default function AdminPage() {
     return (
       <div className="admin-dashboard">
         <div className="dashboard-container">
-          <div className="loading-spinner">Loading Dashboard...</div>
+          <div className="loading-spinner">{t('loading')}</div>
         </div>
       </div>
     );
@@ -208,10 +263,10 @@ export default function AdminPage() {
     <div className="admin-dashboard">
       <div className="dashboard-container">
         <div className="dashboard-header">
-          <h1>Admin Dashboard</h1>
+          <h1>{t('adminDashboard')}</h1>
           <p className="venue-name">{groundName}</p>
           <button className="logout-btn" onClick={handleLogout}>
-            Logout
+            {t('logout')}
           </button>
         </div>
 
@@ -219,12 +274,12 @@ export default function AdminPage() {
         <div className="bookings-section">
           <div className="section-header pending-header">
             <span className="status-icon">⏱</span>
-            <h2>Pending Bookings ({pendingBookings.length})</h2>
+            <h2>{t('pendingBookings')} ({pendingBookings.length})</h2>
           </div>
           
           <div className="bookings-list">
             {pendingBookings.length === 0 ? (
-              <p className="no-bookings">No pending bookings</p>
+              <p className="no-bookings">{t('noPendingBookings')}</p>
             ) : (
               pendingBookings.map((booking) => (
                 <div key={booking._id} className="booking-card pending-card">
@@ -236,17 +291,17 @@ export default function AdminPage() {
                     
                     <div className="booking-info-section">
                       <div className="info-row">
-                        <span className="info-label">Name:</span>
-                        <span className="info-text">{booking.userId?.name || 'N/A'}</span>
+                        <span className="info-label">{t('name')}:</span>
+                        <span className="info-text">{booking.userId?.username || 'N/A'}</span>
                       </div>
                       <div className="info-row">
-                        <span className="info-label">Email:</span>
+                        <span className="info-label">{t('email')}:</span>
                         <span className="info-text">{booking.userId?.email || 'N/A'}</span>
                       </div>
                     </div>
 
                     <div className="booking-amount">
-                      <div className="amount-label">Amount:</div>
+                      <div className="amount-label">{t('amount')}:</div>
                       <div className="amount-value">PKR {booking.price}</div>
                     </div>
                   </div>
@@ -256,19 +311,19 @@ export default function AdminPage() {
                       className="btn-screenshot"
                       onClick={() => handleViewScreenshot(booking.screenshot)}
                     >
-                      View Screenshot
+                      {t('viewScreenshot')}
                     </button>
                     <button 
                       className="btn-confirm"
                       onClick={() => handleConfirm(booking._id)}
                     >
-                      Confirm
+                      {t('confirm')}
                     </button>
                     <button 
                       className="btn-reject"
-                      onClick={() => handleReject(booking._id, booking.userId?.name)}
+                      onClick={() => handleReject(booking._id, booking.userId?.username)}
                     >
-                      Reject
+                      {t('reject')}
                     </button>
                   </div>
                 </div>
@@ -281,12 +336,12 @@ export default function AdminPage() {
         <div className="bookings-section">
           <div className="section-header confirmed-header">
             <span className="status-icon">✓</span>
-            <h2>Confirmed Bookings ({confirmedBookings.length})</h2>
+            <h2>{t('confirmedBookings')} ({confirmedBookings.length})</h2>
           </div>
           
           <div className="bookings-list">
             {confirmedBookings.length === 0 ? (
-              <p className="no-bookings">No confirmed bookings</p>
+              <p className="no-bookings">{t('noConfirmedBookings')}</p>
             ) : (
               confirmedBookings.map((booking) => (
                 <div key={booking._id} className="booking-card confirmed-card">
@@ -298,24 +353,31 @@ export default function AdminPage() {
                     
                     <div className="booking-info-section">
                       <div className="info-row">
-                        <span className="info-label">Name:</span>
-                        <span className="info-text">{booking.userId?.name || 'N/A'}</span>
+                        <span className="info-label">{t('name')}:</span>
+                        <span className="info-text">{booking.userId?.username || 'N/A'}</span>
                       </div>
                       <div className="info-row">
-                        <span className="info-label">Email:</span>
+                        <span className="info-label">{t('email')}:</span>
                         <span className="info-text">{booking.userId?.email || 'N/A'}</span>
                       </div>
                     </div>
 
                     <div className="booking-amount">
-                      <div className="amount-label">Amount:</div>
+                      <div className="amount-label">{t('amount')}:</div>
                       <div className="amount-value">PKR {booking.price}</div>
                     </div>
                   </div>
 
                   <div className="booking-actions">
                     <button className="btn-confirmed" disabled>
-                      ✓ Confirmed
+                      ✓ {t('confirmed')}
+                    </button>
+                    <button 
+                      className="btn-cancel"
+                      onClick={() => handleCancel(booking._id, booking.userId?.username)}
+                      title="Cancel booking"
+                    >
+                      ✕
                     </button>
                   </div>
                 </div>
@@ -332,7 +394,7 @@ export default function AdminPage() {
             <button className="modal-close" onClick={() => setScreenshotModal(null)}>
               ×
             </button>
-            <img src={screenshotModal} alt="Payment Screenshot" className="screenshot-image" />
+            <img src={screenshotModal} alt={t('paymentScreenshot')} className="screenshot-image" />
           </div>
         </div>
       )}

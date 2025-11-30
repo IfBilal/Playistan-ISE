@@ -5,7 +5,7 @@ import { ApiError } from "../utils/ApiError.js";
 
 const allGrounds = asyncHandler(async (req, res) => {
   const grounds = await Ground.find()
-    .populate("owner", "name email")
+    .populate("owner", "username phoneNumber")
     .select("-ownerPassword");
 
   res
@@ -21,7 +21,7 @@ const filterGroundByCity = asyncHandler(async (req, res) => {
   }
 
   const grounds = await Ground.find({ city })
-    .populate("owner", "name email")
+    .populate("owner", "username phoneNumber")
     .select("-ownerPassword");
 
   res
@@ -34,7 +34,7 @@ const filterGroundByCity = asyncHandler(async (req, res) => {
 const sortAscending = asyncHandler(async (req, res) => {
   const grounds = await Ground.find()
     .sort({ basePrice: 1 })
-    .populate("owner", "name email")
+    .populate("owner", "username phoneNumber")
     .select("-ownerPassword");
 
   res
@@ -47,7 +47,7 @@ const sortAscending = asyncHandler(async (req, res) => {
 const sortDescending = asyncHandler(async (req, res) => {
   const grounds = await Ground.find()
     .sort({ basePrice: -1 })
-    .populate("owner", "name email")
+    .populate("owner", "username phoneNumber")
     .select("-ownerPassword");
 
   res

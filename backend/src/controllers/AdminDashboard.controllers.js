@@ -123,16 +123,16 @@ let generateAccessAndRefreshToken = async function (userId) {
 };
 
 const pendingBookings = asyncHandler(async (req, res) => {
-  const admin = await Admin.findById(req.user._id);
+  const admin = await Admin.findById(req.user._id).populate('ground', 'name location');
   if (!admin) {
     throw new ApiError(404, "Admin not found");
   }
 
   const pendingBookings = await Booking.find({
     status: "pending",
-    groundId: admin.ground,
+    groundId: admin.ground._id,
   })
-    .populate("userId", "name email")
+    .populate("userId", "username email")
     .populate("groundId", "name location");
 
   return res
@@ -140,10 +140,32 @@ const pendingBookings = asyncHandler(async (req, res) => {
     .json(
       new ApiResponse(
         200,
-        pendingBookings,
+        {
+          bookings: pendingBookings,
+          ground: admin.ground
+        },
         "Pending bookings retrieved successfully"
       )
     );
+});
+
+const confirmedBookings = asyncHandler(async (req, res) => {
+  const admin = await Admin.findById(req.user._id).populate('ground', 'name location');
+  if (!admin) {
+    throw new ApiError(404, "Admin not found");
+  }
+
+  const bookings = await Booking.find({ 
+    groundId: admin.ground._id, 
+    status: "confirmed" 
+  })
+    .populate("userId", "username email")
+    .populate("groundId", "name location")
+    .sort({ createdAt: -1 });
+    
+  res
+    .status(200)
+    .json(new ApiResponse(200, bookings, "Confirmed bookings retrieved successfully"));
 });
 
 const confirmBooking = asyncHandler(async (req, res) => {
@@ -158,7 +180,7 @@ const confirmBooking = asyncHandler(async (req, res) => {
     { status: "confirmed" },
     { new: true }
   )
-    .populate("userId", "name email")
+    .populate("userId", "username email")
     .populate("groundId", "name location");
 
   if (!booking) {
@@ -186,12 +208,31 @@ const rejectBooking = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, "Booking cancelled successfully"));
 });
 
+const cancelBooking = asyncHandler(async (req, res) => {
+  const { bookingId } = req.body;
+
+  if (!bookingId) {
+    throw new ApiError(400, "Booking ID is required");
+  }
+
+  const booking = await Booking.findByIdAndDelete(bookingId);
+  if (!booking) {
+    throw new ApiError(404, "Booking not found");
+  }
+  
+  return res
+    .status(200)
+    .json(new ApiResponse(200, null, "Confirmed booking cancelled successfully"));
+});
+
 export {
   loginAdmin,
   logoutAdmin,
   refreshAccessToken,
   generateAccessAndRefreshToken,
   pendingBookings,
+  confirmedBookings,
   confirmBooking,
   rejectBooking,
+  cancelBooking,
 };
