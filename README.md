@@ -552,14 +552,14 @@ npm run build
         <img src="https://github.com/IfBilal.png" width="100px;" alt="M. Bilal Tahir"/><br />
         <sub><b>M. Bilal Tahir</b></sub>
       </a><br />
-      <sub>Lead Developer</sub>
+      <sub>🎨 Frontend Developer</sub>
     </td>
     <td align="center">
       <a href="https://github.com/T361">
         <img src="https://github.com/T361.png" width="100px;" alt="Taimoor Shaukat"/><br />
         <sub><b>Taimoor Shaukat</b></sub>
       </a><br />
-      <sub>Contributor</sub>
+      <sub>⚙️ Backend Developer</sub>
     </td>
   </tr>
 </table>
