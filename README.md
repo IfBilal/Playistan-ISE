@@ -552,14 +552,14 @@ npm run build
         <img src="https://github.com/IfBilal.png" width="100px;" alt="M. Bilal Tahir"/><br />
         <sub><b>M. Bilal Tahir</b></sub>
       </a><br />
-      <sub>🎨 Frontend Developer</sub>
+      <sub>🚀 Lead Developer</sub>
     </td>
     <td align="center">
       <a href="https://github.com/T361">
         <img src="https://github.com/T361.png" width="100px;" alt="Taimoor Shaukat"/><br />
         <sub><b>Taimoor Shaukat</b></sub>
       </a><br />
-      <sub>⚙️ Backend Developer</sub>
+      <sub>🚀 Lead Developer</sub>
     </td>
   </tr>
 </table>
@@ -568,7 +568,7 @@ npm run build
 
 ## 📄 License
 
-This project is licensed under the **ISC License**.
+This project is licensed under the **MIT License** - see the [LICENSE](LICENSE) file for details.
 
 ---
 
