@@ -25,10 +25,6 @@ const groundSchema = new Schema(
       url: { type: String, required: true },
       publicId: { type: String, required: true },
     },
-    ownerPassword: {
-      type: String,
-      required: true,
-    },
     sportTypes: {
       type: [String],
       required: true,

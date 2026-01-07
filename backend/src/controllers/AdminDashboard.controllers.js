@@ -5,6 +5,108 @@ import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
+import { Ground } from "../models/ground.models.js";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
+
+let createAdmin = asyncHandler(async (req, res) => {
+  let {
+    username,
+    phoneNumber,
+    password,
+    groundName,
+    description,
+    city,
+    sportTypes,
+    location,
+    basePrice,
+    availableHours,
+    rules,
+  } = req.body;
+  let coverImage = req.files.coverImage ? req.files.coverImage[0] : null;
+  let photos = req.files.photos ? req.files.photos : [];
+
+  if (
+    Object.values({
+      username,
+      phoneNumber,
+      password,
+      groundName,
+      description,
+      city,
+      sportTypes,
+      location,
+      basePrice,
+      availableHours,
+      rules,
+    }).some((val) => !val || val.toString().trim() === "")
+  ) {
+    throw new ApiError(400, "All fields are required");
+  }
+  availableHours = JSON.parse(req.body.availableHours);
+  if (!coverImage) {
+    throw new ApiError(400, "Cover image is required");
+  }
+  if (await Admin.findOne({ username })) {
+    throw new ApiError(409, "Admin with same username already exists");
+  }
+  if (await Ground.findOne({ name: groundName })) {
+    throw new ApiError(409, "Ground with same name already exists");
+  }
+  try {
+    let admin = await Admin.create({
+      username,
+      phoneNumber,
+      password,
+    });
+    if (!admin) throw new ApiError(500, "Error creating admin");
+    let uploadedCoverImage = await uploadOnCloudinary(coverImage.path);
+    if (!uploadedCoverImage)
+      throw new ApiError(500, "Error uploading cover image");
+    let uploadedPhotos = await Promise.all(
+      photos.map((photo) => uploadOnCloudinary(photo.path))
+    );
+    if (!uploadedPhotos) {
+      throw new ApiError(500, "Error uploading photos");
+    }
+    let ground = await Ground.create({
+      name: groundName,
+      owner: admin._id,
+      description,
+      city,
+      sportTypes,
+      location,
+      basePrice,
+      availableHours,
+      rules,
+      coverImage: {
+        url: uploadedCoverImage.url,
+        publicId: uploadedCoverImage.public_id,
+      },
+      photos: uploadedPhotos.map((photo) => ({
+        url: photo.url,
+        publicId: photo.public_id,
+      })),
+    });
+    if (!ground) {
+      console.log("admin deleted");
+
+      await Admin.findByIdAndDelete(admin._id);
+      throw new ApiError(500, "Error creating ground");
+    }
+    admin.ground = ground._id;
+    await admin.save();
+    res.status(201).json(new ApiResponse(201, admin, ground, "Admin created"));
+  } catch (error) {
+    if (error instanceof ApiError) {
+      throw error;
+    }
+    throw new ApiError(
+      500,
+      "Something went wrong while registering Admin",
+      error
+    );
+  }
+});
 
 let loginAdmin = asyncHandler(async (req, res) => {
   let { username, password } = req.body;
@@ -14,11 +116,15 @@ let loginAdmin = asyncHandler(async (req, res) => {
 
   let admin;
   try {
-    admin = await Admin.findOne({ username, password });
+    admin = await Admin.findOne({ username });
     if (!admin) {
       throw new ApiError(404, "Admin not found");
     }
+    let passwordCorrect = await admin.isPasswordCorrect(password);
 
+    if (!passwordCorrect) {
+      throw new ApiError(400, "Wrong password");
+    }
     let { accessToken, refreshToken } = await generateAccessAndRefreshToken(
       admin._id
     );
@@ -123,7 +229,10 @@ let generateAccessAndRefreshToken = async function (userId) {
 };
 
 const pendingBookings = asyncHandler(async (req, res) => {
-  const admin = await Admin.findById(req.user._id).populate('ground', 'name location');
+  const admin = await Admin.findById(req.user._id).populate(
+    "ground",
+    "name location"
+  );
   if (!admin) {
     throw new ApiError(404, "Admin not found");
   }
@@ -135,37 +244,44 @@ const pendingBookings = asyncHandler(async (req, res) => {
     .populate("userId", "username email")
     .populate("groundId", "name location");
 
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        {
-          bookings: pendingBookings,
-          ground: admin.ground
-        },
-        "Pending bookings retrieved successfully"
-      )
-    );
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      {
+        bookings: pendingBookings,
+        ground: admin.ground,
+      },
+      "Pending bookings retrieved successfully"
+    )
+  );
 });
 
 const confirmedBookings = asyncHandler(async (req, res) => {
-  const admin = await Admin.findById(req.user._id).populate('ground', 'name location');
+  const admin = await Admin.findById(req.user._id).populate(
+    "ground",
+    "name location"
+  );
   if (!admin) {
     throw new ApiError(404, "Admin not found");
   }
 
-  const bookings = await Booking.find({ 
-    groundId: admin.ground._id, 
-    status: "confirmed" 
+  const bookings = await Booking.find({
+    groundId: admin.ground._id,
+    status: "confirmed",
   })
     .populate("userId", "username email")
     .populate("groundId", "name location")
     .sort({ createdAt: -1 });
-    
+
   res
     .status(200)
-    .json(new ApiResponse(200, bookings, "Confirmed bookings retrieved successfully"));
+    .json(
+      new ApiResponse(
+        200,
+        bookings,
+        "Confirmed bookings retrieved successfully"
+      )
+    );
 });
 
 const confirmBooking = asyncHandler(async (req, res) => {
@@ -219,10 +335,12 @@ const cancelBooking = asyncHandler(async (req, res) => {
   if (!booking) {
     throw new ApiError(404, "Booking not found");
   }
-  
+
   return res
     .status(200)
-    .json(new ApiResponse(200, null, "Confirmed booking cancelled successfully"));
+    .json(
+      new ApiResponse(200, null, "Confirmed booking cancelled successfully")
+    );
 });
 
 export {
@@ -235,4 +353,5 @@ export {
   confirmBooking,
   rejectBooking,
   cancelBooking,
+  createAdmin,
 };

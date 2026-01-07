@@ -16,10 +16,9 @@ const adminSchema = new Schema(
       required: true,
       trim: true,
     },
-    ground:{
+    ground: {
       type: Schema.Types.ObjectId,
       ref: "Ground",
-      required: true
     },
     password: {
       type: String,
@@ -32,7 +31,6 @@ const adminSchema = new Schema(
   { timestamps: true }
 );
 
-
 adminSchema.methods.generateAccessToken = function () {
   return jwt.sign(
     {
@@ -41,6 +39,15 @@ adminSchema.methods.generateAccessToken = function () {
     process.env.ACCESS_TOKEN_SECRET,
     { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
   );
+};
+
+adminSchema.pre("save", async function () {
+  if (!this.isModified("password"))  return;
+    this.password = await bcrypt.hash(this.password, 12);
+});
+
+adminSchema.methods.isPasswordCorrect = async function (password) {
+  return await bcrypt.compare(password, this.password);
 };
 
 adminSchema.methods.generateRefreshToken = function () {

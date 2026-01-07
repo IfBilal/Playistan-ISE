@@ -4,9 +4,7 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import { ApiError } from "../utils/ApiError.js";
 
 const allGrounds = asyncHandler(async (req, res) => {
-  const grounds = await Ground.find()
-    .populate("owner", "username phoneNumber")
-    .select("-ownerPassword");
+  const grounds = await Ground.find().populate("owner", "username phoneNumber");
 
   res
     .status(200)
@@ -20,9 +18,10 @@ const filterGroundByCity = asyncHandler(async (req, res) => {
     throw new ApiError(400, "City is required");
   }
 
-  const grounds = await Ground.find({ city })
-    .populate("owner", "username phoneNumber")
-    .select("-ownerPassword");
+  const grounds = await Ground.find({ city }).populate(
+    "owner",
+    "username phoneNumber"
+  );
 
   res
     .status(200)
@@ -34,8 +33,7 @@ const filterGroundByCity = asyncHandler(async (req, res) => {
 const sortAscending = asyncHandler(async (req, res) => {
   const grounds = await Ground.find()
     .sort({ basePrice: 1 })
-    .populate("owner", "username phoneNumber")
-    .select("-ownerPassword");
+    .populate("owner", "username phoneNumber");
 
   res
     .status(200)
@@ -47,8 +45,7 @@ const sortAscending = asyncHandler(async (req, res) => {
 const sortDescending = asyncHandler(async (req, res) => {
   const grounds = await Ground.find()
     .sort({ basePrice: -1 })
-    .populate("owner", "username phoneNumber")
-    .select("-ownerPassword");
+    .populate("owner", "username phoneNumber");
 
   res
     .status(200)

@@ -22,6 +22,7 @@ import bookingRouter from "./routes/booking.router.js";
 import groundRouter from "./routes/ground.router.js";
 import chatRouter from "./routes/chat.router.js";
 import reviewRouter from "./routes/review.router.js";
+import healthcheckRouter from "./routes/healthcheck.router.js"; 
 
 app.use("/api/v1/admin", adminRouter);
 app.use("/api/v1/bookings", bookingRouter);
@@ -29,6 +30,7 @@ app.use("/api/v1/grounds", groundRouter);
 app.use("/api/v1/users", userRouter);
 app.use("/api/v1/chat", chatRouter);
 app.use("/api/v1/reviews", reviewRouter);
+app.use("/api/v1/healthcheck", healthcheckRouter);
 
 app.use(errorHandler);
 export default app;
