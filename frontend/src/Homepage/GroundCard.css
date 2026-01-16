@@ -1,211 +1,254 @@
-/* Ground Card Container */
+/* ==== GROUND CARD: ARENA OS GLASS CARD ==== */
+
 .ground-card {
-  background: rgba(0, 26, 15, 0.6);
-  backdrop-filter: blur(10px);
-  border-radius: 20px;
-  overflow: hidden;
-  border: 1px solid rgba(74, 222, 128, 0.2);
-  transition: all 0.4s ease;
-  cursor: pointer;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
+  gap: 16px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   height: 100%;
-  position: relative;
+  animation: floatIn 0.5s ease-out backwards, floatDelayed 7s ease-in-out infinite;
+  box-shadow: 
+    0 20px 40px -15px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
-.ground-card::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(74, 222, 128, 0.1) 0%, transparent 100%);
-  opacity: 0;
-  transition: opacity 0.4s ease;
-  pointer-events: none;
-}
+/* Stagger animation for cards */
+.ground-card:nth-child(1) { animation-delay: 0s, 0.5s; }
+.ground-card:nth-child(2) { animation-delay: 0.1s, 0.6s; }
+.ground-card:nth-child(3) { animation-delay: 0.2s, 0.7s; }
+.ground-card:nth-child(4) { animation-delay: 0.3s, 0.8s; }
+.ground-card:nth-child(5) { animation-delay: 0.4s, 0.9s; }
+.ground-card:nth-child(6) { animation-delay: 0.5s, 1.0s; }
 
 .ground-card:hover {
-  transform: translateY(-12px);
-  border-color: #4ADE80;
-  box-shadow: 0 20px 40px rgba(74, 222, 128, 0.3);
-}
-
-.ground-card:hover::before {
-  opacity: 1;
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-12px) scale(1.02);
+  box-shadow: 
+    0 35px 60px -15px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(255, 255, 255, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* Image Section */
 .ground-image-container {
   position: relative;
   width: 100%;
-  height: 240px;
+  height: 200px;
   overflow: hidden;
+  border-radius: 16px;
+  background: #171717;
 }
 
 .ground-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.4s ease;
+  transition: transform 0.4s ease, filter 0.4s ease;
 }
 
 .ground-card:hover .ground-image {
-  transform: scale(1.1);
+  transform: scale(1.05);
 }
 
+/* Availability Badge */
 .availability-badge {
   position: absolute;
-  top: 16px;
-  right: 16px;
-  background: linear-gradient(135deg, #4ADE80 0%, #22C55E 100%);
-  color: #001a0f;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 4px 12px rgba(74, 222, 128, 0.4);
+  top: 12px;
+  right: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.7);
+  backdrop-filter: blur(10px);
+  padding: 8px 12px;
+  border-radius: 9999px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.availability-badge::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
   animation: pulse 2s ease-in-out infinite;
 }
 
 @keyframes pulse {
-  0%, 100% {
-    transform: scale(1);
-    box-shadow: 0 4px 12px rgba(74, 222, 128, 0.4);
-  }
-  50% {
-    transform: scale(1.05);
-    box-shadow: 0 6px 16px rgba(74, 222, 128, 0.6);
-  }
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.9); }
 }
 
-/* Details Section */
+.availability-badge span {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  font-weight: 600;
+  color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  background: transparent !important;
+  text-shadow: 0 0 8px rgba(16, 185, 129, 0.4);
+}
+
+/* Content Wrapper */
 .ground-details {
-  padding: 24px;
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   flex: 1;
+  padding: 8px;
 }
 
 .ground-name {
-  font-size: 24px;
-  font-weight: 800;
+  font-family: 'Space Grotesk', sans-serif;
+  font-size: 20px;
+  font-weight: 700;
   color: #ffffff;
+  text-transform: uppercase;
+  letter-spacing: -0.01em;
   margin: 0;
-  line-height: 1.3;
-  text-shadow: 0 2px 8px rgba(74, 222, 128, 0.2);
+  line-height: 1.2;
+  text-shadow: 
+    0 0 20px rgba(255, 255, 255, 0.3),
+    0 0 40px rgba(255, 255, 255, 0.1),
+    0 2px 4px rgba(0, 0, 0, 0.8);
 }
 
 /* Info Items */
 .ground-info {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap;
   gap: 12px;
+  align-items: center;
 }
 
 .info-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  color: #A7F3D0;
-  font-size: 15px;
-  font-weight: 500;
+  gap: 6px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-shadow: 0 0 10px rgba(255, 255, 255, 0.15);
 }
 
 .info-item .icon {
-  width: 20px;
-  height: 20px;
-  color: #4ADE80;
-  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  color: rgba(255, 255, 255, 0.5);
 }
 
 /* Footer Section */
 .ground-footer {
   margin-top: auto;
-  padding-top: 20px;
-  border-top: 1px solid rgba(74, 222, 128, 0.2);
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
-  flex-direction: column;
-  gap: 16px;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .price-section {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .price {
-  font-size: 28px;
-  font-weight: 900;
-  background: linear-gradient(135deg, #4ADE80 0%, #22C55E 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 18px;
+  font-weight: 600;
+  color: #ffffff;
+  text-shadow: 
+    0 0 15px rgba(255, 255, 255, 0.3),
+    0 0 30px rgba(255, 255, 255, 0.1),
+    0 1px 3px rgba(0, 0, 0, 0.8);
 }
 
 .price-label {
-  font-size: 12px;
-  color: #A7F3D0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: rgba(255, 255, 255, 0.5);
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.1);
 }
 
-/* Book Now Button */
+/* Book Now Button - Glass with Hover Invert */
 .book-now-btn {
-  width: 100%;
-  padding: 14px 28px;
-  background: linear-gradient(135deg, #4ADE80 0%, #22C55E 100%);
-  color: #001a0f;
-  border: none;
-  border-radius: 12px;
-  font-size: 15px;
-  font-weight: 800;
+  height: 40px;
+  padding: 0 24px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 9999px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all 0.2s ease;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-  box-shadow: 0 4px 12px rgba(74, 222, 128, 0.3);
+  letter-spacing: 0.05em;
 }
 
 .book-now-btn:hover {
-  background: linear-gradient(135deg, #22C55E 0%, #16A34A 100%);
+  background: #ffffff;
+  color: #000000;
+  border-color: #ffffff;
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(74, 222, 128, 0.5);
 }
 
 .book-now-btn:active {
   transform: translateY(0);
 }
 
-/* Responsive Design */
+/* Ensure no child background glitch */
+.book-now-btn * {
+  background: transparent !important;
+}
+
+/* Responsive */
 @media (max-width: 768px) {
   .ground-card {
-    max-width: 100%;
+    padding: 12px;
+    border-radius: 20px;
   }
 
   .ground-image-container {
-    height: 200px;
+    height: 160px;
+    border-radius: 12px;
+  }
+
+  .ground-details {
+    padding: 4px;
+    gap: 8px;
   }
 
   .ground-name {
-    font-size: 20px;
+    font-size: 16px;
+  }
+
+  .info-item {
+    font-size: 11px;
   }
 
   .price {
-    font-size: 24px;
-  }
-
-  .ground-footer {
-    flex-direction: column;
-    align-items: stretch;
+    font-size: 16px;
   }
 
   .book-now-btn {
-    width: 100%;
+    height: 36px;
+    padding: 0 20px;
+    font-size: 11px;
   }
 }

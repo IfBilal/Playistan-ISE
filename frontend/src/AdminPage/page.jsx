@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLanguage } from "../contexts/LanguageContext.jsx";
-import { useTheme } from "../contexts/ThemeContext.jsx";
 import "./page.css";
 
 export default function AdminPage() {
-  const { t } = useLanguage();
-  const { theme } = useTheme();
   const navigate = useNavigate();
   const [pendingBookings, setPendingBookings] = useState([]);
   const [confirmedBookings, setConfirmedBookings] = useState([]);
@@ -16,7 +12,7 @@ export default function AdminPage() {
   const [screenshotModal, setScreenshotModal] = useState(null);
 
   useEffect(() => {
-    document.body.style.background = "radial-gradient(circle at top left, #001a0f 0%, #000a05 50%, #001505 100%)";
+    document.body.style.background = "linear-gradient(135deg, #0f172a 0%, #020617 50%, #0c1929 100%)";
     document.body.style.minHeight = "100vh";
     document.body.style.margin = "0";
     
@@ -253,7 +249,7 @@ export default function AdminPage() {
     return (
       <div className="admin-dashboard">
         <div className="dashboard-container">
-          <div className="loading-spinner">{t('loading')}</div>
+          <div className="loading-spinner">Loading...</div>
         </div>
       </div>
     );
@@ -263,10 +259,10 @@ export default function AdminPage() {
     <div className="admin-dashboard">
       <div className="dashboard-container">
         <div className="dashboard-header">
-          <h1>{t('adminDashboard')}</h1>
+          <h1>Admin Dashboard</h1>
           <p className="venue-name">{groundName}</p>
           <button className="logout-btn" onClick={handleLogout}>
-            {t('logout')}
+            Logout
           </button>
         </div>
 
@@ -274,12 +270,12 @@ export default function AdminPage() {
         <div className="bookings-section">
           <div className="section-header pending-header">
             <span className="status-icon">⏱</span>
-            <h2>{t('pendingBookings')} ({pendingBookings.length})</h2>
+            <h2>Pending Bookings ({pendingBookings.length})</h2>
           </div>
           
           <div className="bookings-list">
             {pendingBookings.length === 0 ? (
-              <p className="no-bookings">{t('noPendingBookings')}</p>
+              <p className="no-bookings">No pending bookings</p>
             ) : (
               pendingBookings.map((booking) => (
                 <div key={booking._id} className="booking-card pending-card">
@@ -291,17 +287,17 @@ export default function AdminPage() {
                     
                     <div className="booking-info-section">
                       <div className="info-row">
-                        <span className="info-label">{t('name')}:</span>
+                        <span className="info-label">Name:</span>
                         <span className="info-text">{booking.userId?.username || 'N/A'}</span>
                       </div>
                       <div className="info-row">
-                        <span className="info-label">{t('email')}:</span>
+                        <span className="info-label">Email:</span>
                         <span className="info-text">{booking.userId?.email || 'N/A'}</span>
                       </div>
                     </div>
 
                     <div className="booking-amount">
-                      <div className="amount-label">{t('amount')}:</div>
+                      <div className="amount-label">Amount:</div>
                       <div className="amount-value">PKR {booking.price}</div>
                     </div>
                   </div>
@@ -311,19 +307,19 @@ export default function AdminPage() {
                       className="btn-screenshot"
                       onClick={() => handleViewScreenshot(booking.screenshot)}
                     >
-                      {t('viewScreenshot')}
+                      View Screenshot
                     </button>
                     <button 
                       className="btn-confirm"
                       onClick={() => handleConfirm(booking._id)}
                     >
-                      {t('confirm')}
+                      Confirm
                     </button>
                     <button 
                       className="btn-reject"
                       onClick={() => handleReject(booking._id, booking.userId?.username)}
                     >
-                      {t('reject')}
+                      Reject
                     </button>
                   </div>
                 </div>
@@ -336,12 +332,12 @@ export default function AdminPage() {
         <div className="bookings-section">
           <div className="section-header confirmed-header">
             <span className="status-icon">✓</span>
-            <h2>{t('confirmedBookings')} ({confirmedBookings.length})</h2>
+            <h2>Confirmed Bookings ({confirmedBookings.length})</h2>
           </div>
           
           <div className="bookings-list">
             {confirmedBookings.length === 0 ? (
-              <p className="no-bookings">{t('noConfirmedBookings')}</p>
+              <p className="no-bookings">No confirmed bookings</p>
             ) : (
               confirmedBookings.map((booking) => (
                 <div key={booking._id} className="booking-card confirmed-card">
@@ -353,24 +349,24 @@ export default function AdminPage() {
                     
                     <div className="booking-info-section">
                       <div className="info-row">
-                        <span className="info-label">{t('name')}:</span>
+                        <span className="info-label">Name:</span>
                         <span className="info-text">{booking.userId?.username || 'N/A'}</span>
                       </div>
                       <div className="info-row">
-                        <span className="info-label">{t('email')}:</span>
+                        <span className="info-label">Email:</span>
                         <span className="info-text">{booking.userId?.email || 'N/A'}</span>
                       </div>
                     </div>
 
                     <div className="booking-amount">
-                      <div className="amount-label">{t('amount')}:</div>
+                      <div className="amount-label">Amount:</div>
                       <div className="amount-value">PKR {booking.price}</div>
                     </div>
                   </div>
 
                   <div className="booking-actions">
                     <button className="btn-confirmed" disabled>
-                      ✓ {t('confirmed')}
+                      ✓ Confirmed
                     </button>
                     <button 
                       className="btn-cancel"
@@ -394,7 +390,7 @@ export default function AdminPage() {
             <button className="modal-close" onClick={() => setScreenshotModal(null)}>
               ×
             </button>
-            <img src={screenshotModal} alt={t('paymentScreenshot')} className="screenshot-image" />
+            <img src={screenshotModal} alt="Payment Screenshot" className="screenshot-image" />
           </div>
         </div>
       )}

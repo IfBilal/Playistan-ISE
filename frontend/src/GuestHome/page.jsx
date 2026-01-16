@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useLanguage } from '../contexts/LanguageContext.jsx';
 import GroundCard from './GroundCard.jsx'; // Corrected import path
 import "./Page.css"; // Corrected import path
 
@@ -9,7 +8,6 @@ const GuestHome = () => {
   const [loading, setLoading] = useState(true);
   const [selectedCity, setSelectedCity] = useState('all');
   const navigate = useNavigate();
-  const { t } = useLanguage();
 
   useEffect(() => {
     fetchGrounds();
@@ -41,10 +39,6 @@ const GuestHome = () => {
     navigate('/signup');
   };
 
-  const handleAddGround = () => {
-    navigate('/addground'); // Navigates to the route we set up in main.jsx
-  };
-
   const filteredGrounds = selectedCity === 'all'
     ? grounds
     : grounds.filter(ground => ground.city.toLowerCase() === selectedCity.toLowerCase());
@@ -66,10 +60,7 @@ const GuestHome = () => {
           <h1 className="homepage-logo">PLAYISTAN</h1>
           <nav className="header-nav">
             <button className="nav-btn-user" onClick={handleBecomeUser}>
-              {t('signup')}
-            </button>
-            <button className="nav-btn-add-ground" onClick={handleAddGround}>
-              {t('addGround')}
+              Sign Up
             </button>
           </nav>
         </div>
@@ -78,8 +69,8 @@ const GuestHome = () => {
       {/* Hero Section */}
       <section className="hero-section">
         <div className="hero-content">
-          <h2 className="hero-title">{t('findGround')}</h2>
-          <p className="hero-subtitle">{t('searchPlaceholder')}</p>
+          <h2 className="hero-title">Find Your Perfect Ground</h2>
+          <p className="hero-subtitle">Discover and book sports venues near you</p>
 
           {/* City Filter */}
           <div className="filter-bar">
@@ -119,8 +110,8 @@ const GuestHome = () => {
                 <circle cx="11" cy="11" r="8" strokeWidth={2} />
                 <path d="M21 21l-4.35-4.35" strokeWidth={2} strokeLinecap="round" />
               </svg>
-              <h3>{t('noGroundsFound')}</h3>
-              <p>{t('searchPlaceholder')}</p>
+              <h3>No grounds found</h3>
+              <p>Try adjusting your search filters</p>
             </div>
           )}
         </div>

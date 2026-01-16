@@ -464,7 +464,29 @@ npm run dev
 
 ---
 
-## 🎨 Theme & Language System
+## 🎨 Design System
+
+### Glass & Steel UI
+Playistan features a modern **"Glass & Steel"** design system with:
+
+| Element | Implementation |
+|---------|----------------|
+| **Glass Cards** | `backdrop-filter: blur(20px)` with subtle borders |
+| **Color Palette** | Slate backgrounds, emerald/amber accents |
+| **Typography** | Space Grotesk (headings), Inter (body) |
+| **Animations** | Smooth hover lifts, fade/slide transitions |
+| **Shadows** | Layered depth with color-tinted glows |
+
+### Color Tokens
+```css
+/* Primary Colors */
+--slate-950: #020617;      /* Deep background */
+--slate-900: #0f172a;      /* Card backgrounds */
+--emerald-400: #34d399;    /* Success, confirmed */
+--amber-400: #fbbf24;      /* Warning, pending */
+--red-400: #f87171;        /* Danger, reject */
+--indigo-400: #818cf8;     /* Info, actions */
+```
 
 ### Theme Toggle
 Playistan supports **Dark** and **Light** themes using CSS custom properties:
@@ -530,16 +552,19 @@ npm run build
 ## 📸 Screenshots
 
 ### 🏠 Homepage (Dark Theme)
-> Browse and discover sports grounds with city filtering
+> Browse and discover sports grounds with city filtering and glass-morphism cards
 
 ### 📅 Ground Booking
-> Select dates, view available slots, and book with payment proof
+> Select dates, view available slots, and book with payment proof upload
 
 ### 💬 Community Chat
-> Real-time messaging with image/video support
+> Real-time messaging with image/video support and online user indicators
 
 ### 👨‍💼 Admin Dashboard
-> Manage pending and confirmed bookings
+> Glass & Steel UI with pending/confirmed booking cards, payment screenshot verification
+
+### 🔐 Admin Login
+> Centered glass card with gradient login button and venue branding
 
 ---
 

@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLanguage } from "../contexts/LanguageContext.jsx";
 import "./Page.css";
 
 const SignUp = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     username: "",
     email: "",
@@ -68,32 +66,32 @@ const SignUp = () => {
 
       <div className="signup-card">
         <h1 className="signup-title">Playistan</h1>
-        <p className="signup-subtitle">{t('signup')}</p>
+        <p className="signup-subtitle">Create Account</p>
 
         {error && <div className="error-message">{error}</div>}
 
         <form className="signup-form" onSubmit={handleSignUp}>
-          <label>{t('username')}</label>
+          <label>Username</label>
           <input
             type="text"
             name="username"
-            placeholder={t('enterUsername')}
+            placeholder="Enter your username"
             value={formData.username}
             onChange={handleChange}
             required
           />
 
-          <label>{t('email')}</label>
+          <label>Email</label>
           <input
             type="email"
             name="email"
-            placeholder={t('enterEmail')}
+            placeholder="Enter your email"
             value={formData.email}
             onChange={handleChange}
             required
           />
 
-          <label>{t('password')}</label>
+          <label>Password</label>
           <input
             type="password"
             name="password"
@@ -104,14 +102,14 @@ const SignUp = () => {
           />
 
           <button type="submit" className="signup-btn" disabled={loading}>
-            {loading ? t('loading') : t('signup')}
+            {loading ? "Loading..." : "Sign Up"}
           </button>
         </form>
 
         <p className="login-text">
-          {t('alreadyHaveAccount')}{" "}
+          Already have an account?{" "}
           <a href="#" onClick={handleBackToLogin}>
-            {t('signInHere')}
+            Sign in here
           </a>
         </p>
       </div>

@@ -1,13 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useParams, useNavigate } from 'react-router-dom';
-import { useLanguage } from '../contexts/LanguageContext';
+import { Swiper, SwiperSlide } from 'swiper/react';
+import { Navigation, Pagination, Thumbs } from 'swiper/modules';
+import 'swiper/css';
+import 'swiper/css/navigation';
+import 'swiper/css/pagination';
+import 'swiper/css/thumbs';
 import './page.css';
 
 const BookingPage = () => {
   const location = useLocation();
   const { groundId } = useParams();
   const navigate = useNavigate();
-  const { t } = useLanguage();
+  const [thumbsSwiper, setThumbsSwiper] = useState(null);
 
   const [ground, setGround] = useState(location.state || null);
   const [loading, setLoading] = useState(!location.state);
@@ -302,23 +307,60 @@ const BookingPage = () => {
             )}
           </div>
 
-          <div className="booking-images">
-            <img
-              className="main-image"
-              src={ground.coverImage?.url || 'https://images.unsplash.com/photo-1624880357913-a8539238245b?w=800&q=80'}
-              alt={ground.name}
-            />
-            <div className="photo-grid">
+          {/* Image Gallery with Swiper */}
+          <div className="image-gallery">
+            {/* Main Image Swiper */}
+            <Swiper
+              modules={[Navigation, Pagination, Thumbs]}
+              navigation
+              pagination={{ clickable: true }}
+              thumbs={{ swiper: thumbsSwiper && !thumbsSwiper.destroyed ? thumbsSwiper : null }}
+              className="main-swiper"
+              spaceBetween={0}
+              slidesPerView={1}
+            >
+              <SwiperSlide>
+                <img
+                  src={ground.coverImage?.url || 'https://images.unsplash.com/photo-1624880357913-a8539238245b?w=800&q=80'}
+                  alt={ground.name}
+                />
+              </SwiperSlide>
               {Array.isArray(ground.photos) && ground.photos.map((photo, idx) => (
-                <img key={idx} className="small-photo" src={photo.url} alt={`photo-${idx}`} />
+                <SwiperSlide key={idx}>
+                  <img src={photo.url} alt={`${ground.name} - ${idx + 1}`} />
+                </SwiperSlide>
               ))}
-            </div>
+            </Swiper>
+
+            {/* Thumbnail Swiper */}
+            {Array.isArray(ground.photos) && ground.photos.length > 0 && (
+              <Swiper
+                modules={[Thumbs]}
+                onSwiper={setThumbsSwiper}
+                watchSlidesProgress
+                slidesPerView={4}
+                spaceBetween={8}
+                className="thumbs-swiper"
+              >
+                <SwiperSlide>
+                  <img
+                    src={ground.coverImage?.url || 'https://images.unsplash.com/photo-1624880357913-a8539238245b?w=800&q=80'}
+                    alt={`${ground.name} thumb`}
+                  />
+                </SwiperSlide>
+                {ground.photos.map((photo, idx) => (
+                  <SwiperSlide key={idx}>
+                    <img src={photo.url} alt={`${ground.name} thumb ${idx + 1}`} />
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            )}
           </div>
         </div>
 
         {/* Date Selection */}
         <div className="date-section">
-          <h3 className="section-title">{t('selectDate')}</h3>
+          <h3 className="section-title">Select Date</h3>
           <div className="date-grid">
             {availableDates.map((d, idx) => (
               <div
@@ -395,18 +437,18 @@ const BookingPage = () => {
             // Disable if loading, no date/slot selected, or no screenshot uploaded
             disabled={bookingLoading || !selectedSlot || !selectedDate || !paymentScreenshot}
           >
-            {bookingLoading ? 'Processing Request...' : t('bookNow')}
+            {bookingLoading ? 'Processing Request...' : 'Book Now'}
           </button>
         </div>
 
         {/* Reviews Section */}
         <div className="reviews-section">
           <div className="reviews-header">
-            <h3 className="section-title">{t('reviews')} ({totalReviews})</h3>
+            <h3 className="section-title">Reviews ({totalReviews})</h3>
             {averageRating > 0 && (
               <div className="average-rating">
                 {renderStars(Math.round(averageRating))}
-                <span className="rating-text">{averageRating} {t('stars')}</span>
+                <span className="rating-text">{averageRating} stars</span>
               </div>
             )}
           </div>
@@ -425,8 +467,8 @@ const BookingPage = () => {
             disabled={userReviewCount >= 2}
           >
             {userReviewCount >= 2 
-              ? `${t('reviewLimit')} (${userReviewCount}/2)` 
-              : (showReviewForm ? t('cancel') : t('addReview'))
+              ? `Review limit reached (${userReviewCount}/2)` 
+              : (showReviewForm ? 'Cancel' : 'Add Review')
             }
           </button>
 
@@ -434,15 +476,15 @@ const BookingPage = () => {
           {showReviewForm && userReviewCount < 2 && (
             <form className="review-form" onSubmit={handleSubmitReview}>
               <div className="form-group">
-                <label>{t('rating')}:</label>
+                <label>Rating:</label>
                 {renderStars(reviewRating, true, setReviewRating)}
               </div>
               <div className="form-group">
-                <label>{t('yourReview')}:</label>
+                <label>Your Review:</label>
                 <textarea
                   value={reviewComment}
                   onChange={(e) => setReviewComment(e.target.value)}
-                  placeholder={t('writeReview')}
+                  placeholder="Write your review..."
                   rows="4"
                   maxLength="500"
                   required
@@ -454,17 +496,17 @@ const BookingPage = () => {
                 className="submit-review-btn"
                 disabled={reviewLoading || !reviewRating || !reviewComment.trim()}
               >
-                {reviewLoading ? t('loading') : t('submitReview')}
+                {reviewLoading ? 'Loading...' : 'Submit Review'}
               </button>
-              <p className="review-limit-text">{t('reviewLimit')}</p>
+              <p className="review-limit-text">Maximum 2 reviews per user</p>
             </form>
           )}
 
           <div className="reviews-list">
             {reviews.length === 0 ? (
               <div className="no-reviews">
-                <p>{t('noReviews')}</p>
-                <p className="text-muted">{t('beFirstToReview')}</p>
+                <p>No reviews yet</p>
+                <p className="text-muted">Be the first to review!</p>
               </div>
             ) : (
               reviews.map((review) => (

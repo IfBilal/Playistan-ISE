@@ -64,15 +64,14 @@ const AdminLogin = () => {
   };
 
   return (
-    <>
+    <div className="admin-login-wrapper">
       <div className="stars"></div>
 
       <div className="admin-login-container">
-        <div className="admin-login-card">
           
           <div className="admin-login-header">
-            <h1>Admin Login</h1>
-            <p>Access your ground's dashboard</p>
+            <h1 className="admin-login-logo">Admin Login</h1>
+            <p className="admin-badge">Access your ground's dashboard</p>
           </div>
 
           {error && <div className="message error">{error}</div>}
@@ -80,7 +79,7 @@ const AdminLogin = () => {
           <form className="admin-login-form" onSubmit={handleLogin}>
             
             <div className="form-group">
-              <label htmlFor="username">Username</label>
+              <label htmlFor="username" className="form-label">Username</label>
               <input
                 id="username"
                 type="text"
@@ -95,7 +94,7 @@ const AdminLogin = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="password">Password</label>
+              <label htmlFor="password" className="form-label">Password</label>
               <input
                 id="password"
                 type="password"
@@ -117,9 +116,8 @@ const AdminLogin = () => {
               {loading ? "Logging in..." : "Login"}
             </button>
           </form>
-        </div>
       </div>
-    </>
+    </div>
   );
 };
 

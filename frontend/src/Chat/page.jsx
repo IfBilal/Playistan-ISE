@@ -1,14 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import io from 'socket.io-client';
-import { useTheme } from '../contexts/ThemeContext.jsx';
-import { useLanguage } from '../contexts/LanguageContext.jsx';
 import './page.css';
 
 const Chat = () => {
   const navigate = useNavigate();
-  const { theme, toggleTheme } = useTheme();
-  const { t } = useLanguage();
   const [socket, setSocket] = useState(null);
   const [messages, setMessages] = useState([]);
   const [inputMessage, setInputMessage] = useState('');
@@ -47,10 +43,16 @@ const Chat = () => {
       return;
     }
 
+    // Get accessToken from response data stored during login
+    const accessToken = localStorage.getItem('accessToken');
+
     // Connect to socket with credentials (cookies will be sent automatically)
     const newSocket = io(import.meta.env.VITE_BACKEND_URL, {
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'], // Try polling first (more reliable for cookies)
       withCredentials: true, // This sends cookies automatically
+      auth: {
+        token: accessToken // Also send token via auth object as backup
+      }
     });
 
     newSocket.on('connect', () => {
@@ -60,11 +62,15 @@ const Chat = () => {
 
     newSocket.on('connect_error', (error) => {
       console.error('Connection error:', error.message);
-      // Token might be invalid or expired
-      if (error.message.includes('Authentication') || error.message.includes('token')) {
+      // Only redirect on definitive auth errors, not connection issues
+      if (error.message === 'Authentication token required' || 
+          error.message === 'Invalid token' ||
+          error.message === 'Token expired' ||
+          error.message === 'User not found') {
         alert('Session expired. Please login again.');
         navigate('/');
       }
+      // For other errors (like network issues), don't redirect - socket will retry
     });
 
     setSocket(newSocket);
@@ -381,6 +387,15 @@ const Chat = () => {
     setMessageType('text');
   };
 
+  // Show loading while user is being fetched
+  if (!currentUser) {
+    return (
+      <div className="chat-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <p style={{ color: '#737373' }}>Loading...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="chat-container">
       {/* Header */}
@@ -392,32 +407,12 @@ const Chat = () => {
         </button>
         
         <div className="chat-header-info">
-          <h1>{t('community')}</h1>
+          <h1>Community</h1>
           <p className="online-count">
             <span className="pulse-dot"></span>
-            {onlineUsers.length} {t('membersActive')}
+            {onlineUsers.length} members active
           </p>
         </div>
-
-        <button className="theme-toggle-btn" onClick={toggleTheme} title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
-          {theme === 'dark' ? (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <circle cx="12" cy="12" r="5" strokeWidth={2}/>
-              <line x1="12" y1="1" x2="12" y2="3" strokeWidth={2}/>
-              <line x1="12" y1="21" x2="12" y2="23" strokeWidth={2}/>
-              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" strokeWidth={2}/>
-              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" strokeWidth={2}/>
-              <line x1="1" y1="12" x2="3" y2="12" strokeWidth={2}/>
-              <line x1="21" y1="12" x2="23" y2="12" strokeWidth={2}/>
-              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" strokeWidth={2}/>
-              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" strokeWidth={2}/>
-            </svg>
-          ) : (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" strokeWidth={2}/>
-            </svg>
-          )}
-        </button>
 
         <button className="online-users-btn" onClick={() => socket?.emit('users:online')}>
           <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -433,22 +428,22 @@ const Chat = () => {
             <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
             </svg>
-            <h2>{t('noMessages')}</h2>
-            <p>{t('beFirst')}</p>
+            <h2>No messages yet</h2>
+            <p>Be the first to start the conversation!</p>
           </div>
         ) : (
           messages.map((msg) => (
             <div
               key={msg._id}
-              className={`message ${msg.sender._id === currentUser._id ? 'message-own' : 'message-other'}`}
+              className={`message ${currentUser && msg.sender?._id === currentUser._id ? 'message-own' : 'message-other'}`}
             >
               <div className="message-avatar">
-                {msg.sender.username.charAt(0).toUpperCase()}
+                {msg.sender?.username?.charAt(0).toUpperCase() || '?'}
               </div>
               
               <div className="message-content">
                 <div className="message-header">
-                  <span className="message-username">{msg.sender.username}</span>
+                  <span className="message-username">{msg.sender?.username || 'Unknown'}</span>
                   <span className="message-time">{formatTime(msg.createdAt)}</span>
                 </div>
 
@@ -470,7 +465,7 @@ const Chat = () => {
                   </div>
                 )}
 
-                {msg.sender._id === currentUser._id && (
+                {currentUser && msg.sender?._id === currentUser._id && (
                   <button
                     className="delete-btn"
                     onClick={() => handleDeleteMessage(msg._id)}
@@ -487,7 +482,7 @@ const Chat = () => {
 
         {typingUsers.length > 0 && (
           <div className="typing-indicator">
-            <span>{typingUsers.join(', ')} {typingUsers.length > 1 ? t('areTyping') : t('typing')}</span>
+            <span>{typingUsers.join(', ')} {typingUsers.length > 1 ? 'are typing...' : 'is typing...'}</span>
             <div className="typing-dots">
               <span></span>
               <span></span>
@@ -539,10 +534,10 @@ const Chat = () => {
           {uploadingMedia ? (
             <div className="mini-spinner"></div>
           ) : (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" strokeWidth={2}/>
-              <circle cx="8.5" cy="8.5" r="1.5" strokeWidth={2}/>
-              <path d="M21 15l-5-5L5 21" strokeWidth={2}/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="3" width="18" height="18" rx="3"/>
+              <circle cx="9" cy="9" r="2"/>
+              <path d="M21 15l-3.086-3.086a2 2 0 00-2.828 0L6 21"/>
             </svg>
           )}
         </button>
@@ -557,9 +552,9 @@ const Chat = () => {
           {uploadingMedia ? (
             <div className="mini-spinner"></div>
           ) : (
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-              <path d="M23 7l-7 5 7 5V7z" strokeWidth={2}/>
-              <rect x="1" y="5" width="15" height="14" rx="2" ry="2" strokeWidth={2}/>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14v-4z"/>
+              <rect x="3" y="6" width="12" height="12" rx="2"/>
             </svg>
           )}
         </button>
@@ -567,15 +562,15 @@ const Chat = () => {
         <input
           type="text"
           className="message-input"
-          placeholder={t('typeMessage')}
+          placeholder="Type a message..."
           value={inputMessage}
           onChange={handleTyping}
           disabled={uploadingMedia}
         />
 
-        <button type="submit" className="send-btn" disabled={uploadingMedia}>
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+        <button type="submit" className="send-btn" disabled={uploadingMedia || (!inputMessage.trim() && !mediaPreview)}>
+          <svg viewBox="0 0 24 24" fill="currentColor">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
           </svg>
         </button>
       </form>

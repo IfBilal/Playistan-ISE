@@ -1,11 +1,9 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useLanguage } from "./contexts/LanguageContext.jsx";
 import "./Login.css";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { t } = useLanguage();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -44,8 +42,9 @@ const Login = () => {
       const data = await response.json();
 
       if (response.ok) {
-        // SAVE USER TO LOCALSTORAGE - THIS WAS MISSING!
+        // SAVE USER AND TOKEN TO LOCALSTORAGE
         localStorage.setItem("user", JSON.stringify(data.data.user));
+        localStorage.setItem("accessToken", data.data.accessToken);
         
         navigate("/homepage");
       } else {
@@ -74,22 +73,22 @@ const Login = () => {
 
       <div className="login-card">
         <h1 className="login-title">Playistan</h1>
-        <p className="login-subtitle">{t('signInToAccount')}</p>
+        <p className="login-subtitle">Sign in to your account</p>
 
         {error && <div className="error-message">{error}</div>}
 
         <form className="login-form" onSubmit={handleLogin}>
-          <label>{t('username')}</label>
+          <label>Username</label>
           <input
             type="text"
             name="username"
-            placeholder={t('enterUsername')}
+            placeholder="Enter your username"
             value={formData.username}
             onChange={handleChange}
             required
           />
 
-          <label>{t('password')}</label>
+          <label>Password</label>
           <input
             type="password"
             name="password"
@@ -100,7 +99,7 @@ const Login = () => {
           />
 
           <button type="submit" className="login-btn" disabled={loading}>
-            {loading ? t('signingIn') : t('signIn')}
+            {loading ? "Signing in..." : "Sign In"}
           </button>
 
           <button 
@@ -108,14 +107,14 @@ const Login = () => {
             className="guest-btn" 
             onClick={handleGuestAccess}
           >
-            {t('continueAsGuest')}
+            Continue as Guest
           </button>
         </form>
 
         <p className="signup-text">
-          {t('dontHaveAccount')}{" "}
+          Don't have an account?{" "}
           <a href="#" onClick={handleSignUp}>
-            {t('signUpHere')}
+            Sign up here
           </a>
         </p>
       </div>
