@@ -56,17 +56,16 @@ Finding and booking sports grounds in Pakistan has traditionally been a fragment
 | **💳 Payment Verification** | Upload payment screenshots for admin approval |
 | **⭐ Review System** | Rate and review grounds (up to 2 reviews per ground) |
 | **💬 Community Chat** | Real-time messaging with text, images, and video support |
-| **🌙 Theme Toggle** | Switch between dark and light modes |
-| **🌐 Bilingual Support** | Full English and Urdu (اردو) language support with RTL |
+| **👤 User Profile** | View and manage your bookings and account details |
 
 ### 👨‍💼 For Ground Admins
 
 | Feature | Description |
 |---------|-------------|
-| **📊 Dashboard** | Comprehensive view of pending and confirmed bookings |
+| **📊 Dashboard** | Glass & Steel UI with pending and confirmed booking cards |
 | **✅ Booking Management** | Approve or reject bookings with payment screenshot verification |
 | **❌ Cancellation** | Cancel confirmed bookings when necessary |
-| **🏢 Venue Management** | Manage ground details, pricing, and availability hours |
+| **🖼️ Screenshot Preview** | View payment proof in modal overlay |
 
 ### 🎁 Guest Access
 
@@ -487,33 +486,6 @@ Playistan features a modern **"Glass & Steel"** design system with:
 --red-400: #f87171;        /* Danger, reject */
 --indigo-400: #818cf8;     /* Info, actions */
 ```
-
-### Theme Toggle
-Playistan supports **Dark** and **Light** themes using CSS custom properties:
-
-```css
-:root[data-theme="dark"] {
-  --primary-color: #4ADE80;
-  --bg-gradient-start: #0a0e27;
-  /* ... */
-}
-
-:root[data-theme="light"] {
-  --primary-color: #16a34a;
-  --bg-gradient-start: #f8fafc;
-  /* ... */
-}
-```
-
-Theme preference is persisted in `localStorage` and applied via the `data-theme` attribute on `<html>`.
-
-### Language Toggle
-Full bilingual support with **English** and **Urdu**:
-
-- RTL (Right-to-Left) layout for Urdu
-- 250+ translated strings
-- Language persisted in `localStorage`
-- Automatic `dir` attribute switching
 
 ---
 
